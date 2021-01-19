@@ -35,17 +35,18 @@ library(kableExtra)
 
 ## Reading in Data
 ```{r}
-## Do 2 files at a time. 
+## Do 2 files at a time. Try full_join or inner. S
+##Get new files from FZ at interact/data_snapshots/Treksoft_surveys_2020-12-03_1884baf.zip
 
-#W1 bff188
-victoria_new <- read_csv("~/INTERACT/veritas/health_1vic_main_bfd440e.csv") #vic health survey
-victoria_eligibility <- read_csv("~/INTERACT/veritas/eligibility_1vic_main_bfd440e.csv") #vic eligibility survey
+#W1
+victoria_new <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
+victoria_eligibility <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
 
 #W2
-victoria_two <- read_csv("~/INTERACT/veritas/health_2vic_main_bfd440e.csv") # w2 health n = 164
-victoria_new_two <- read_csv("~/INTERACT/veritas/health_2vicnew_main_bfd440e.csv") # w2 eli n = 123
-victoria_eligibility_two <- read_csv("~/INTERACT/veritas/eligibility_2vic_main_bfd440e.csv") # w2 new health n = 173
-victoria_eligibility_new_two <- read_csv("~/INTERACT/veritas/eligibility_2vicnew_main_bfd440e.csv") # w2 new eli n = 143
+victoria_two <- read_csv("~/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
+victoria_new_two <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 eli n = 123
+victoria_eligibility_two <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 new health n = 173
+victoria_eligibility_new_two <- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli n = 143
 
 # Merge w1 and w2
 ## 
@@ -114,6 +115,8 @@ write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv") #writing CSV
 
 ## Age descriptive statistics for Vic - Health and Eligibility surveys
 ```{r}
+
+## calculate age
 summary(vic_mf$age, na.rm = TRUE)
 sd(vic_mf$age)
 
