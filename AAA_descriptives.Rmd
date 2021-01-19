@@ -41,15 +41,23 @@ library(kableExtra)
 #W1
 victoria_new <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
 victoria_eligibility <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
+# Merge w1
+w1 <- full_join(victoria_new, victoria_eligibility)
+# Got all 281 participants but also have n = 27 with interact_id's but NAs for everything else. Delete the 27?
 
 #W2
 victoria_two <- read_csv("~/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
-victoria_new_two <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 eli n = 123
-victoria_eligibility_two <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 new health n = 173
-victoria_eligibility_new_two <- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli n = 143
+victoria_new_two <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
+# Merge w2 Health returning and new
+w2h <- full_join(victoria_two, victoria_new_two)
+# Pretty damn clean. n = 287 w2
 
+victoria_eligibility_new_two <- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
+victoria_eligibility_two <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
 # Merge w1 and w2
-## 
+w2e <- full_join(victoria_eligibility_new_two, victoria_eligibility_two)
+# Clean and pretty. n = 287 w2. Now to combine. 
+
 victoria_merged <- bind_rows(victoria_eligibility, victoria_new, victoria_two, victoria_new_two, victoria_eligibility_two, victoria_new_two, .id = "interact_id") #merge
 vic_mf <- filter(victoria_merged, transp_bikes_adults >= 0) #filtering for participants who did eligibility but didn't complete the health survey
 ```
