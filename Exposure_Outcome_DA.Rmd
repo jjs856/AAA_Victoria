@@ -1,0 +1,70 @@
+---
+title: "Exposure_outcome_DA"
+author: "Jonathan Slaney"
+date: "12/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Packages
+```{r}
+library(lmtest)
+library(tidyverse)
+library(ggplot2)
+library(haven)
+library(janitor)
+library(pastecs)
+library(psych)
+library(car)
+library(Hmisc)
+library(ggm)
+library(polycor)
+library(tableone)
+library(forcats)
+library(gmodels)
+library(QuantPsyc)
+library(KernSmooth)
+library(raster)
+library(sp)
+library(sf)
+library(lubridate)
+library(anytime)
+library(stringr)
+library(stringi)
+```
+
+## Reading in data
+```{r}
+gps_join_all_percent <- read_csv("gps_join_all_percent.csv")
+wear_time_stamps <- read_csv("wear_time_stamps.csv")
+victoria_gps_only <- read_csv("victoria_gps_only.csv")
+sd_days <- read_csv("all_sds_victoria_phase_1.csv")
+#will need to read in GPS only if not already read in if other files are open
+
+```
+
+## Rename INTERACT ID to GPS ID
+```{r}
+colnames(gps_join_all_percent)[colnames(gps_join_all_percent)== "interact_id"] <- "gps_id" #this is the gps ID not interact ID. Changed name to reflect that
+gps_join_all_percent[is.na(gps_join_all_percent <- gps_join_all_percent)] <- 0 #converted NA's to zero to make merging easier. 
+```
+
+## Merge gps_join_all_percent with victoria_gps_only 
+```{r}
+gps_join_all_percent[, "gps_id"] <- apply(gps_join_all_percent[, "gps_id"], 1, function(x) as.integer(x))
+victoria_gps_only[, "gps_id"] <- apply(victoria_gps_only[, "gps_id"], 1, function(x) as.integer(x))
+#converting to integar first so both gps_id are using the same data format
+
+victoria_gps_only_merged <- left_join(victoria_gps_only, gps_join_all_percent, by = "gps_id") #successfully merged 
+```
+
+## Connect PA total and cycling PA with exposure data
+```{r}
+PA_total_and_cycling <- dplyr::select(victoria_gps_only_merged, "interact_id", "Cycling_formula", "total_pa_met_formula", "proportion_PA", "n.x", "n.y", "amount", "percent")
+
+write_csv(PA_total_and_cycling, "PA_total_and_cycling.csv")
+```
+

@@ -1,0 +1,401 @@
+---
+title: "GPS_DA"
+author: "Jonathan Slaney"
+date: "12/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Melissa code. Edit to work for combined dataset
+
+
+## Loading Packages
+```{r}
+library(lmtest)
+library(tidyverse)
+library(ggplot2)
+library(haven)
+library(janitor)
+library(pastecs)
+library(psych)
+library(car)
+library(Hmisc)
+library(ggm)
+library(polycor)
+library(tableone)
+library(forcats)
+library(gmodels)
+library(QuantPsyc)
+library(KernSmooth)
+library(raster)
+library(sp)
+library(sf)
+library(lubridate)
+library(rgdal)
+require(devtools)
+library(data.table)
+```
+
+## Reading in Data
+```{r}
+getwd()
+
+victoria_merged_filter <-
+  fread("victoria_merged_filter.csv", sep = ",")
+
+filenames <-
+  list.files(path = "./all_gps", full.names = TRUE) #[1:3]#take out [1:3] when using all gps datasets
+
+nFiles <- length(filenames)
+
+start_time <- Sys.time()
+all_gps_list <- lapply(filenames, function(i) {
+  print(paste0("[", which(i == filenames), "/", nFiles ,"]"))
+  fread(i, nThread = 8)
+  
+}) #function to iterate through all excel files in the all_gps folder and read as a tibble and assign to a list
+
+all_gps_list_na_rm <- lapply(all_gps_list, function(i) {
+  na.omit(i)
+})
+
+all_gps_list <- NULL
+gc()
+
+#iterate through each list element and convert each row to a point and assign to new list of point datasets where each list element corresponds to a single participants gps traces
+
+#convert to spatial
+all_gps_list_sf <- lapply(all_gps_list_na_rm, function(i) {
+  st_as_sf(i, coords = c("lon", "lat"), crs = 4326)
+})
+
+all_gps_list_na_rm <- NULL
+gc()
+
+#project
+all_gps_list_project <- lapply(all_gps_list_sf, function(i) {
+  st_transform(i, 26910)
+})
+
+#fwrite(all_gps_list_project, "all_gps_list_project.rda")
+save(all_gps_list_project, file = "all_gps_list_project.rda")
+rm(all_gps_list_sf)
+gc()
+
+load("all_gps_list_project.rda")
+doy_start_end_filtered <- fread("doy_start_end_filtered.csv")
+doy_start_end_filtered_1 <- dplyr::select(doy_start_end_filtered, "interact_id", "gps_id", "doy_start", "doy_end", "unique_seconds")
+
+all_gps_list_project_1 <- lapply(all_gps_list_project, function(i){
+  i %>% mutate(doy_1 = lubridate::yday(utcdate))
+})
+
+rm(all_gps_list_project)
+gc()
+
+all_gps_list_project_2 <- lapply(all_gps_list_project_1, function(i){
+  i %>% mutate(gps_id = interact_id)
+})
+
+rm(all_gps_list_project_1)
+gc()
+
+gps_time_stamps <- lapply(all_gps_list_project_2, function(i){
+  i %>% left_join(doy_start_end_filtered_1, by = "gps_id")
+})
+
+rm(all_gps_list_project_2)
+gc()
+
+gps_time_stamps_filtered <- lapply(gps_time_stamps, function(i){
+  i %>% group_by(gps_id, doy_1) %>% filter(doy_1 >= doy_start) %>% filter(doy_1 <= doy_end) %>%    filter(unique_seconds > 7500)
+}) #filtering to get the correct number of days and then filtering for number of points per day (doesn't completely work - days work but unique seconds doesn't
+
+save(gps_time_stamps_filtered, file = "gps_time_stamps_filtered.rda")
+
+load("gps_time_stamps_filtered.rda")
+
+gps_time_stamps_filtered_1 <- lapply(gps_time_stamps_filtered, function(i){
+  i %>% mutate(n_points = 1)
+}) #adding a point to each row to allow for sum of points per day to filter again
+
+rm(gps_time_stamps_filtered_1)
+
+gps_time_stamps_filtered_2 <- lapply(gps_time_stamps_filtered_1, function(i){
+  i %>% group_by(interact_id.y, doy_1) %>%
+   dplyr::mutate(day_points = sum(n_points))
+}) #grouping by interact ID and then day and then summing by points per day
+
+gps_time_stamps_filtered_3 <- lapply(gps_time_stamps_filtered_2, function(i){
+  i %>% filter(day_points > 7500)
+}) #filtering entire data frame for points greater than 7500. 
+#this worked. 
+
+save(gps_time_stamps_filtered_3, file = "gps_time_stamps_filtered_3.rda")
+
+rm(gps_time_stamps_filtered_2)
+gc()
+
+#load bikelanes
+
+bike_lanes_1 <-
+  st_read("./Bike_Lanes/Bike_Lanes.shp") #this worked instead
+pandora <- bike_lanes_1 %>% filter(FullDescr == "Protected bike lane")
+plot(pandora)
+
+pandora <- st_transform(pandora, 26910)
+
+pandora_buffer <- st_buffer(pandora, dist = 200)
+
+save(pandora_buffer, file = "pandora_buffer.rda")
+
+#for each gps trace, count the number of points within the 200m pandora buffer
+
+join_gps_to_buffer <- lapply(gps_time_stamps_filtered_3, function(i) {
+  i %>%
+    st_join(pandora_buffer)
+})
+
+filter_gps_in_buffer <- lapply(join_gps_to_buffer, function(i) {
+  i %>%
+    filter(!(is.na(FullDescr)))
+})
+#each list element in filter_gps_in_buffer corresponds to the gps points that fall within 200m of the pandora protected bikelane for a particular participant.
+
+#join_gps_to_buffer <- NULL
+gc()
+#takes the total number of GPS points for each participant and groups by INTERACT ID
+```
+
+```{r}
+gps_join_1 <- lapply(gps_time_stamps_filtered_3, function(i) {
+  i %>%
+    group_by(interact_id.y) %>%
+    dplyr::summarise(n = n()) %>%
+    as_tibble()
+})
+#THIS WORKS!!!!
+
+save(gps_join_1, file = "gps_join_1.rda")
+load("gps_join_1.rda")
+
+#takes the total number of GPS points that touch pandora buffer for each participant and groups by INTERACT ID
+gps_join_2 <- lapply(filter_gps_in_buffer, function(i) {
+  i %>%
+    group_by(interact_id.y) %>% 
+    dplyr::summarise(n = n()) %>% as_tibble()
+})
+
+save(gps_join_2, file = "gps_join_2.rda")
+filter_gps_in_buffer <- NULL
+gc()
+
+
+#joining total points (n.x.) with intersections with pandora (n.y)
+gps_join_all <-
+  gps_join_1 %>% bind_rows() %>% left_join((gps_join_2 %>% bind_rows()), by =
+                                             "interact_id.y")
+save(gps_join_all, file = "gps_join_all.rda")
+##Can't figure out a way to change the NA to zero. I tried fill = 0
+
+gps_join_all_select <-
+  dplyr::select(gps_join_all, "interact_id.y", "n.x", "n.y")
+
+gps_join_all_amount <- mutate(gps_join_all_select, amount = n.y / n.x)
+
+gps_join_all_percent_updated <-
+  mutate(gps_join_all_amount, percent = amount * 100)
+
+write_csv(gps_join_all_percent_updated, "gps_join_all_percent_updated.csv")
+#save(gps_join_all_percent, file = "gps_join_all_percent.rda")
+#Next steps
+#1. fill NA with 0
+#2. remove geometry x and y to help with the speed - done
+#3. calculate percentage of total time/total points to calculate final exposure variable. - done
+
+
+
+#you could find a way to convert each list element to a dataframe, then use bind_rows to create 1 giant dataset and aggregate exposure that way.
+
+```
+
+## Check number of days and hours for each participant
+```{r}
+#this gives total number of days, seconds and hours and gives an average of hours per day collected
+gps_wear_time_overall <- lapply(gps_time_stamps_filtered,function(i) {
+  i %>% group_by(interact_id.y) %>% 
+    mutate(doy = yday(utcdate)#,
+           ) %>% 
+    summarise(unique_days = length(unique(doy)),
+              unique_seconds = length(unique(utcdate))) %>% 
+  mutate(unique_hours = unique_seconds/60/60,
+         hours_per_day = unique_hours/unique_days
+         )})
+#this gives actual total number of hours per day 
+gps_wear_time_by_day_unique_time_stamps_1 <- lapply(gps_time_stamps_filtered_3,function(i) {
+  i %>% group_by(interact_id.y) %>% 
+    mutate(doy = yday(utcdate)#,
+           ) %>% 
+    group_by(doy) %>%
+    summarise(unique_days = length(unique(doy)),
+              unique_seconds = length(unique(utcdate))) %>% 
+  mutate(unique_hours = unique_seconds/60/60,
+         hours_per_day = unique_hours/unique_days
+         )})
+save(gps_wear_time_by_day_unique_time_stamps_1, file = "gps_wear_time_by_day_unique_time_stamps_updated_final.rda")
+#this gives the time of day that participants wore as well as total time per day
+
+
+
+gps_wear_time_by_day_min_max_time_stamps <- lapply(gps_time_stamps_filtered_3, function(i) {
+  i %>% group_by(interact_id.y) %>% 
+    mutate(doy = yday(utcdate)
+           ) %>% 
+    group_by(doy)%>%
+    dplyr::summarise(interact_id.y = mean(interact_id.y),
+              unique_days = length(unique(doy)),
+              unique_seconds = length(unique(utcdate)),
+              n_traces = n(),
+              min_time = min(utcdate),
+              max_time = max(utcdate)
+              ) %>% 
+    mutate(total_time = (as.POSIXct(max_time) - as.POSIXct(min_time)),
+           unique_hours = unique_seconds/60/60,
+           hours_per_day = unique_hours/unique_days)})
+
+
+#save(gps_wear_time_by_day_min_max_time_stamps, file = "gps_wear_time_by_day_min_max_time_stamps_updated.rda")
+
+wear_time_stamps <- do.call(rbind, lapply(gps_wear_time_by_day_min_max_time_stamps, function(x) as.data.frame(x)))
+wear_time_stamps$geometry <- NULL
+fwrite(wear_time_stamps, "wear_time_stamps_updated.csv", sep = ",", showProgress = T)
+
+```
+
+##Checking to see if the new filtered file works before running the rest of the data
+```{r}
+
+gps_wear_time_by_day_min_max_time_stamps_1 <- lapply(gps_time_stamps_filtered_3, function(i) {
+  i %>% group_by(interact_id.y) %>% 
+    mutate(doy = yday(utcdate)
+           ) %>% 
+    group_by(doy)%>%
+    dplyr::summarise(interact_id.y = mean(interact_id.y),
+              unique_days = length(unique(doy)),
+              unique_seconds = length(unique(utcdate)),
+              n_traces = n(),
+              min_time = min(utcdate),
+              max_time = max(utcdate)
+              ) %>% 
+    mutate(total_time = (as.POSIXct(max_time) - as.POSIXct(min_time)),
+           unique_hours = unique_seconds/60/60,
+           hours_per_day = unique_hours/unique_days)})
+
+wear_time_stamps_filtered <- do.call(rbind, lapply(gps_wear_time_by_day_min_max_time_stamps_1, function(x) as.data.frame(x)))
+wear_time_stamps_filtered$geometry <- NULL
+fwrite(wear_time_stamps_filtered, "wear_time_stamps_updated_final.csv", sep = ",", showProgress = T)
+```
+
+## Reading in table of power
+```{r}
+table_of_power <- read_csv("victoria_top_minute.csv")
+
+table_of_power_updated <- read_csv("victoria_top_1min.csv")
+
+doy_start_end_filtered <- read_csv("doy_start_end_filtered.csv")
+doy_start_end_final <- doy_start_end_filtered %>% dplyr::select("interact_id", "gps_id", "doy_start", "doy_end")
+
+write_csv(doy_start_end_final, "doy_start_end_final.csv")
+
+doy_start_end_final <- read_csv("doy_start_end_final.csv")
+
+wear_time_stamps_updated_final <- read_csv("wear_time_stamps_updated_final.csv")
+```
+
+## Adding day of year from UTC date to table of power
+```{r}
+table_of_power_updated <- table_of_power_updated %>% mutate(doy_1 = lubridate::yday(ymd_hms(substr(table_of_power_updated$utc_date, 1, 19))))
+
+table_of_power_updated <- table_of_power_updated %>% mutate(interact_id = inter_id)
+
+table_of_power_updated_merged <- left_join(table_of_power_updated, doy_start_end_final, by = "interact_id")
+```
+
+## Filtering to get new table of power file with correct dates and number of points
+```{r}
+table_of_power_merged_updated_1 <- table_of_power_updated_merged %>% group_by(interact_id, doy_1) %>% 
+  filter(doy_1 >= doy_start) %>% filter(doy_1 <= doy_end) 
+
+table_of_power_merged_updated_1 <- table_of_power_merged_updated_1 %>% mutate(n_points = 1)
+#adding a point to each row to allow for sum of points per day to filter again
+
+table_of_power_merged_updated_1 <- table_of_power_merged_updated_1 %>% group_by(interact_id, doy_1) %>%
+   dplyr::mutate(day_points = sum(n_points))
+
+
+tabyl(table_of_power_merged_updated_1$day_points)
+table_of_power_merged_updated_2 <- table_of_power_merged_updated_1 %>% filter(day_points > 125)
+#filtering entire data frame for points greater than 7500 seconds or 125 minutes  
+```
+
+## New table with PA by day
+```{r}
+table_of_power_merged_updated_2 <- table_of_power_merged_updated_2 %>% group_by(interact_id, doy_1) %>%
+  dplyr::mutate(day_sedentary = sum(activity_levels == "Sedentary"), 
+                day_light = sum(activity_levels == "Light"),
+                day_moderate = sum(activity_levels == "Moderate"),
+                day_vigorous = sum(activity_levels == "Vigorous"))
+
+write_csv(table_of_power_merged_updated_2, "table_of_power_merged_updated_2.csv")
+
+table_of_power_merged_updated_3 <- table_of_power_merged_updated_2 %>% group_by(interact_id, doy_1) %>% 
+     dplyr::summarise(day_sedentary = first(day_sedentary), 
+            day_light = first(day_light), 
+            day_moderate = first(day_moderate), 
+            day_vigorous = first(day_vigorous))
+
+
+table_of_power_merged_updated_3 <- table_of_power_merged_updated_3 %>% group_by(interact_id) %>%
+  dplyr::mutate(total_sedentary = sum(day_sedentary), 
+         total_light = sum(day_light), 
+         total_moderate = sum(day_moderate), 
+         total_vigorous = sum(day_vigorous))
+
+table_of_power_merged_updated_3 <- table_of_power_merged_updated_3 %>% group_by(interact_id) %>%
+  dplyr::mutate(total_pa = total_light + total_moderate + total_vigorous)
+
+write_csv(table_of_power_merged_updated_3, "table_of_power_merged_updated_3.csv")
+```
+
+## Small data frame table
+```{r}
+table_of_power_merged_updated_4 <- table_of_power_merged_updated_3 %>% dplyr::select("interact_id", "total_sedentary", "total_light", "total_moderate", "total_vigorous", "total_pa") %>% 
+  distinct(interact_id, .keep_all = TRUE)
+
+write_csv(table_of_power_merged_updated_4, "table_of_power_merged_updated_4.csv")
+```
+
+## Reading in victoria_small_merged
+```{r}
+victoria_small_merged_1 <- read_csv("victoria_small_merged_1.csv")
+
+table_of_power_merged_2 <- read_csv("table_of_power_merged_2.csv")
+
+table_of_power_merged_4 <- read_csv("table_of_power_merged_4.csv")
+
+
+
+power_victoria_merged_updated <- full_join(table_of_power_merged_updated_2, victoria_small_merged_1, by = "interact_id") #update once I get new table of power. 
+write_csv(power_victoria_merged_updated, "power_victoria_merged_updated.csv")
+summary_power_victoria_merged_updated <- full_join(table_of_power_merged_updated_4, victoria_small_merged_1, by = "interact_id") #update once you get new table of power
+write_csv(summary_power_victoria_merged_updated, "summary_power_victoria_merged_updated.csv")
+```
+
+
+```{r}
+any(table_of_power == 101005415)
+```
+

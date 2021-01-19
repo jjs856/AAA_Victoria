@@ -1,0 +1,1024 @@
+---
+title: "AAA_descriptives"
+author: "Jonathan Slaney"
+date: "12/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Packages
+```{r}
+library(lmtest)
+library(tidyverse)
+library(ggplot2)
+library(haven)
+library(janitor)
+library(pastecs)
+library(psych)
+library(car)
+library(Hmisc)
+library(ggm)
+library(polycor)
+library(tableone)
+library(forcats)
+library(gmodels)
+library(QuantPsyc)
+library(KernSmooth)
+library(raster)
+library(sp)
+library(sf)
+library(kableExtra)
+```
+
+## Reading in Data
+```{r}
+## Do 2 files at a time. 
+
+#W1 bff188
+victoria_new <- read_csv("~/INTERACT/veritas/health_1vic_main_bfd440e.csv") #vic health survey
+victoria_eligibility <- read_csv("~/INTERACT/veritas/eligibility_1vic_main_bfd440e.csv") #vic eligibility survey
+
+#W2
+victoria_two <- read_csv("~/INTERACT/veritas/health_2vic_main_bfd440e.csv") # w2 health n = 164
+victoria_new_two <- read_csv("~/INTERACT/veritas/health_2vicnew_main_bfd440e.csv") # w2 eli n = 123
+victoria_eligibility_two <- read_csv("~/INTERACT/veritas/eligibility_2vic_main_bfd440e.csv") # w2 new health n = 173
+victoria_eligibility_new_two <- read_csv("~/INTERACT/veritas/eligibility_2vicnew_main_bfd440e.csv") # w2 new eli n = 143
+
+# Merge w1 and w2
+## 
+victoria_merged <- bind_rows(victoria_eligibility, victoria_new, victoria_two, victoria_new_two, victoria_eligibility_two, victoria_new_two, .id = "interact_id") #merge
+vic_mf <- filter(victoria_merged, transp_bikes_adults >= 0) #filtering for participants who did eligibility but didn't complete the health survey
+```
+
+## Reading in SD data
+```{r}
+SD_vic_one <- read_csv("~/INTERACT/SenseDoc/victoria_01_top_1min.csv") # read in SD w1 participants n = 129
+SD_vic_two <- read_csv("~/INTERACT/SenseDoc/victoria_02_top_1min.csv") # read in SD w2 participants n = 153
+SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
+
+table(SD_vic_two$interact_id)
+```
+
+## Changing column names and selecting important columns and filtering data
+
+```{}
+ID_relationship <- mutate(ID_relationship, ID_data = 1)
+
+#changing column names to match other data sets and make them easier to work with in R
+colnames(ID_relationship)[colnames(ID_relationship) == "INTERACT ID"] <- "interact_id"
+#colnames(ID_relationship)[colnames(ID_relationship) == "Sensedoc ID"] <- "sensedoc_ID"
+#colnames(ID_relationship)[colnames(ID_relationship) == "Ethica ID"] <- "ethica_ID"
+
+ID_relationship_1 <- dplyr::select(ID_relationship, "interact_id", "sensedoc_ID", "ethica_ID", "ID_data", "treksoft_id") #selecting only the important columns
+
+typeof(ID_relationship_1$treksoft_id)
+as.numeric(ID_relationship_1$treksoft_id)
+
+ID_relationship_2 <- ID_relationship_1 %>% mutate(NA_checker = case_when(
+  treksoft_id < 908 ~ "1",
+  treksoft_id == 908 ~ "2",
+  treksoft_id > 908 ~ "1"
+)) #participant 908 didn't complete the health survey and was giving alot of problems so we filtered 908 out. 
+
+ID_relationship_3 <- ID_relationship_2 %>% filter(NA_checker == 1) #brings it down to the 308 people who completed eligibility survey
+```
+
+## GPS linking data: changing column names, selecting out important data and working with NA
+```{}
+#changing column names to match other data sets and make them easier to work with in R 
+colnames(gps_ID_relationship)[colnames(gps_ID_relationship)== "interact_id"] <- "gps_id" #changed this INTERACT ID to GPS ID since this is actually the gps ID not the INTERACT ID's that Karen assigned. 
+colnames(gps_ID_relationship)[colnames(gps_ID_relationship)== "sensedoc_id"] <- "sensedoc_ID"
+
+gps_ID_relationship <- dplyr::select(gps_ID_relationship, "gps_id", "sensedoc_ID")  #selecting only the important columns. The treksoft ID and ethica in this file were not complete
+
+gps_ID_relationship_1 <- mutate(gps_ID_relationship, gps_checker = 1) 
+```
+
+## Joining Data
+```{}
+#merged_ID <- left_join(ID_relationship_3, gps_ID_relationship_1, by = "sensedoc_ID") #merging both ID relationship files together using Sensedoc ID - common variable in both files
+#merged_ID_gps <- filter(merged_ID, gps_checker == 1) #filtering to just get the IDS for participants who did GPS analysis. If you leave everybody, then you have to deal with NA issues
+#tabyl(merged_ID$gps_checker)
+#tabyl(merged_ID$gps_checker)
+
+victoria_complete <- left_join(victoria_merged_filter, SD_vic_all, .id = "interact_id") #merging health/eligibility with SD
+
+tabyl(victoria_new_ID_gps$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly. 
+write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv") #writing CSV
+```
+
+## Descriptive Statistics
+
+## Age descriptive statistics for Vic - Health and Eligibility surveys
+```{r}
+summary(vic_mf$age, na.rm = TRUE)
+sd(vic_mf$age)
+
+# Table
+
+t_age <- vic_mf %>%
+          group_by(wave_id, vic_mf$age) %>%
+            summarise(n = n())
+
+kable(t_age)  %>%   kable_styling(bootstrap_options = "striped", full_width = T, position = "left")
+```
+
+## Age Categories (using stats can age groups)
+```{r}
+vic_mf_age <- vic_mf %>% mutate(age_categories = case_when(
+  age < 25 ~ "20-29",
+  age >= 25 & age <= 29 ~ "20-29",
+  age >= 30 & age <= 34 ~ "30-39", 
+  age >= 35 & age <= 39 ~ "30-39",
+  age >= 40 & age <= 44 ~ "40-49",
+  age >= 45 & age <= 49 ~ "40-49",
+  age >= 50 & age <= 54 ~ "50-59",
+  age >= 55 & age <= 59 ~ "50-59", 
+  age >= 60 & age <= 64 ~ "60+",
+  age >= 65 & age <= 69 ~ "60+",
+  age >= 70 & age <= 74 ~ "60+", 
+  age >= 75 & age <= 79 ~ "60+",
+  age >= 80 & age <= 84 ~ "60+"
+))
+tabyl(vic_mf_age$age_categories)
+typeof(vic_mf_age$age_categories)
+
+# Table
+
+t_age_cats <- vic_mf_age %>%
+          group_by(wave_id, vic_mf_age$age_categories) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_age_cats)
+```
+
+```{r}
+age_categories_plot <- ggplot (data = vic_mf_age, aes(age_categories)) + 
+    geom_bar() + 
+        labs(title = "AAA Victoria Age distribution", 
+           x = "Age Categories", 
+            y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=0, hjust=1)) + 
+  facet_wrap(~ wave_id)
+plot(age_categories_plot)
+```
+
+## Barriers to exercise
+```{r}
+age_histogram <- ggplot (data = vic_mf, aes(age)) + 
+    geom_histogram(aes(y = ..density..), color = "black", binwidth = 0.9) + 
+      labs(title = "Barriers to Exercise ", 
+          x = "Barriers to Exercise Score", 
+          y = "Density (% of Participants)") + 
+  facet_wrap(~ wave_id)
+plot(age_histogram)
+```
+
+## Gender Victoria
+```{r}
+vic_mf <- vic_mf %>% mutate(gender = case_when(
+  gender_vic_1 == 1 ~ "Men",
+  gender_vic_2 == 1 ~ "Women", 
+  gender_vic_3 == 1 ~ "Trans or gender non-binary",
+  gender_vic_4 == 1 ~ "Trans or gender non-binary"
+))
+
+tabyl(vic_mf$gender)
+
+# Table
+
+t_gen <- vic_mf %>%
+          group_by(wave_id, vic_mf$gender) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_gen)
+
+```
+
+## Gender
+```{r}
+tabyl(vic_mf$gender)
+
+gender_plot <- ggplot(data = vic_mf, aes(gender)) +
+  geom_bar(aes(fill = gender)) +
+  labs(title = "Gender",
+       x = "Gender Type",
+       y = "Number of Participants (n)") +
+  
+  facet_wrap(~ wave_id)
+plot(gender_plot)
+```
+
+## Housing 
+```{r}
+
+# I seem to be missing the housing variable in my df
+vic_mf <- vic_mf %>% mutate(housing = case_when(
+  house_tenure == 1 ~ "Owner",
+  house_tenure == 2 ~ "Tenant", 
+  house_tenure == 3 ~ "Resident with friends or relatives",
+  house_tenure == 4 ~ "Resident not with friends or relatives", 
+  house_tenure == 5 ~ "Other"
+))
+
+vic_mf$housing <- factor(vic_mf$housing, c("Other", "Resident not with friends or relatives", "Resident with friends or relatives", "Tenant", "Owner")) 
+tabyl(vic_mf$housing)
+
+# Table
+
+t_house <- vic_mf %>%
+          group_by(wave_id, vic_mf$housing) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_house)
+```
+
+## Table for housing and gender
+```{}
+table(vic_mf$housing, vic_mf$gender)
+CrossTable(vic_mf$housing, vic_mf$gender)
+```
+
+## Dwelling Type
+```{r}
+tabyl(vic_mf$dwelling_type)
+
+vic_mf <- vic_mf %>% mutate(housing_type = case_when(
+  dwelling_type == 1 ~ "Single-detached house",
+  dwelling_type == 2 ~ "Semi-detached house", 
+  dwelling_type == 3 ~ "Row house",
+  dwelling_type == 4 ~ "Apartment/Condo in a duplex or triplex", 
+  dwelling_type == 5 ~ "Apartment/Condo with fewer than 5 storeys",
+  dwelling_type == 6 ~ "Apartment/Condo with more than 5 storeys",
+  dwelling_type == 7 ~ "Mobile Home",
+  dwelling_type == 8 ~ "Seniors Home",
+  dwelling_type == 9 ~ "Other"
+))
+
+vic_mf$housing_type <- factor(vic_mf$housing_type, c("Other", "Seniors Home", "Mobile Home", "Apartment/Condo with more than 5 storeys", "Apartment/Condo with fewer than 5 storeys", "Apartment/Condo in a duplex or triplex", "Row house", "Semi-detached house", "Single-detached house" )) 
+tabyl(vic_mf$housing_type)
+
+# Table
+
+t_dwelling <- vic_mf %>%
+          group_by(wave_id, vic_mf$housing_type) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_dwelling)
+```
+
+## Health Status
+```{r}
+tabyl(vic_mf$sf1)
+
+vic_mf <- vic_mf %>% mutate(health_status = case_when(
+  sf1 == 1 ~ "Excellent",
+  sf1 == 2 ~ "Very Good", 
+  sf1 == 3 ~ "Good",
+  sf1 == 4 ~ "Fair", 
+  sf1 == 5 ~ "Poor"
+))
+
+vic_mf$health_status <- factor(vic_mf$health_status, c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+tabyl(vic_mf$health_status)
+
+# Table
+
+t_healthy <- vic_mf %>%
+          group_by(wave_id, vic_mf$health_status) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_healthy)
+```
+
+## Health Status
+```{r}
+vic_mf$health_status <- factor(vic_mf$health_status, c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+tabyl(vic_mf$health_status)
+
+health_plot <- ggplot(data = vic_mf, aes(health_status)) +
+  geom_bar() +
+  labs(title = "Health Status",
+       x = "Health Status",
+       y = "Number of Participants (n)") + 
+  facet_wrap(~ wave_id)
+plot(health_plot)
+```
+
+## Marital Status
+```{r}
+tabyl(vic_mf$marital_status)
+
+vic_mf <- vic_mf %>% mutate(marital = case_when(
+  marital_status == 1 ~ "Single (never married)",
+  marital_status == 2 ~ "Married (or common law)", 
+  marital_status == 3 ~ "Separated or divorced",
+  marital_status == 4 ~ "Widowed"
+))
+tabyl(vic_mf$marital)
+
+# Table
+
+t_wed <- vic_mf %>%
+          group_by(wave_id, vic_mf$marital) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_wed)
+```
+
+## Marital Status
+```{r}
+tabyl(vic_mf$marital)
+marital_plot <- ggplot(data = vic_mf, aes(marital)) +
+  geom_bar() +
+  labs(title = "Marital Status",
+       x = "Marital Status",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1)) + 
+  facet_wrap(~ wave_id)
+plot(marital_plot)
+```
+
+## Children (Yes/No)
+```{r}
+tabyl(vic_mf$children)
+
+vic_mf <- vic_mf %>% mutate(children_1 = case_when(
+  children == 1 ~ "Yes",
+  children == 2 ~ "No"
+))
+tabyl(vic_mf$children_1)
+tabyl(vic_mf$living_children)
+
+# Table
+
+t_kids <- vic_mf %>%
+          group_by(wave_id, vic_mf$children_1) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_kids)
+```
+
+## Born in Canada
+```{r}
+tabyl(vic_mf$born_can)
+
+vic_mf <- vic_mf %>% mutate(born_canada = case_when(
+  born_can == 1 ~ "Yes",
+  born_can == 2 ~ "No"
+))
+tabyl(vic_mf$born_canada)
+
+# Table
+
+t_can  <- vic_mf %>%
+          group_by(wave_id, vic_mf$born_canada) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_can)
+```
+
+## Ethinic/Cultural Groups
+```{r}
+tabyl(vic_mf$group_id)
+
+vic_mf <- vic_mf %>% mutate(ethnicity = case_when(
+  group_id_1 == 1 & group_id_2 == 1 & group_id_4 == 1 ~ "Aboriginal",
+  group_id_2 == 1 & group_id_4 == 1 ~ "Asian", 
+  group_id_4 == 1 & group_id_1 == 1 ~ "Aboriginal",
+  group_id_4 == 1 & group_id_6 == 1 ~ "Middle Eastern",
+  group_id_2 == 1 ~ "Asian",
+  group_id_4 == 1 ~ "Caucasian",
+  group_id_5 == 1 ~ "Latin American",
+  group_id_77 == 1 ~ "Unknown"
+))
+
+vic_mf$ethnicity <- factor(vic_mf$ethnicity, c("Middle Eastern", "Latin American", "Aboriginal", "Asian", "Caucasian", "Unknown"))
+tabyl(vic_mf$ethnicity)
+
+# Table
+
+t_eth <- vic_mf %>%
+          group_by(wave_id, vic_mf$ethnicity) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_eth)
+```
+
+## Ethnicity 
+```{r}
+tabyl(vic_mf$ethnicity)
+ethnicity_plot <- ggplot(data = vic_mf, aes(ethnicity)) +
+  geom_bar() +
+  labs(title = "Ethnicity",
+       x = "Ethnic Group",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1)) + 
+  facet_wrap(~ wave_id)
+plot(ethnicity_plot)
+```
+
+## Ethnicity recoded as numbers for correlation
+```{r}
+vic_mf <- vic_mf %>% mutate(ethnicity_number = case_when(
+  group_id_1 == 1 & group_id_2 == 1 & group_id_4 == 1 ~ "1",
+  group_id_1 == 1 & group_id_4 == 1 ~ "1",
+  group_id_2 == 1 & group_id_4 == 1 ~ "2", 
+  group_id_4 == 1 & group_id_1 == 1 ~ "1",
+  group_id_4 == 1 & group_id_6 == 1 ~ "3",
+  group_id_2 == 1 ~ "2",
+  group_id_4 == 1 ~ "5",
+  group_id_5 == 1 ~ "4",
+  group_id_77 == 1 ~ "6"
+)) 
+vic_mf$ethnicity_number <- as.numeric(vic_mf$ethnicity_number)
+```
+
+## Income
+```{r}
+tabyl(vic_mf$income)
+
+vic_mf <- vic_mf %>% mutate(income_1 = case_when(
+  income == 1 ~ "No income",
+  income == 2 ~ "$1 to $9,999", 
+  income == 3 ~ "$10,000 to $14,999",
+  income == 4 ~ "$15,000 to $19,999", 
+  income == 5 ~ "$20,000 to $29,999",
+  income == 6 ~ "$30,000 to $39,999",
+  income == 7 ~ "$40,000 to $49,999",
+  income == 8 ~ "$50,000 to $99,999",
+  income == 9 ~ "$100,000 to $149,999",
+  income == 10 ~ "$150,000 to $199,999",
+  income == 11 ~ "$200,000 or more",
+  income == 77 ~ "I don't know/Prefer not to answer"
+))
+
+vic_mf$income_1 <- factor(vic_mf$income_1, c("No income", "$1 to $9,999", "$10,000 to $14,999", "$15,000 to $19,999", "$20,000 to $29,999", "$30,000 to $39,999", "$40,000 to $49,999","$50,000 to $99,999","$100,000 to $149,999","$150,000 to $199,999", "$200,000 or more", "I don't know/Prefer not to answer"))
+
+tabyl(vic_mf$income_1)
+summary(vic_mf$income_1)
+
+# Table
+
+t_inc <- vic_mf %>%
+          group_by(wave_id, vic_mf$income_1) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_inc)
+
+```
+
+## Recoding income into 4 categories
+```{r}
+tabyl(vic_mf$income)
+
+vic_mf <- vic_mf %>% mutate(income_2 = case_when(
+  income == 1 ~ "$49,000 or less",
+  income == 2 ~ "$49,000 or less", 
+  income == 3 ~ "$49,000 or less",
+  income == 4 ~ "$49,000 or less", 
+  income == 5 ~ "$49,000 or less",
+  income == 6 ~ "$49,000 or less",
+  income == 7 ~ "$49,000 or less",
+  income == 8 ~ "$50,000 to $99,999",
+  income == 9 ~ "$100,000 to $149,999",
+  income == 10 ~ "$150,000 or more",
+  income == 11 ~ "$150,000 or more",
+  income == 77 ~ "I don't know/Prefer not to answer"
+)) 
+
+vic_mf$income_1 <- factor(vic_mf$income_1, c("No income", "$1 to $9,999", "$10,000 to $14,999", "$15,000 to $19,999", "$20,000 to $29,999", "$30,000 to $39,999", "$40,000 to $49,999","$50,000 to $99,999","$100,000 to $149,999","$150,000 to $199,999", "$200,000 or more", "I don't know/Prefer not to answer"))
+
+tabyl(vic_mf$income_2)
+summary(vic_mf$income)
+
+# Table
+
+t_income <- vic_mf %>%
+          group_by(wave_id, vic_mf$income_2) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_income)
+```
+
+## Income
+```{r}
+income_plot <- ggplot(data = vic_mf, aes(income_1)) +
+  geom_bar() +
+  labs(title = "Income",
+       x = "Income Level",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=30, hjust=1)) + 
+  facet_wrap(~ wave_id)
+plot(income_plot)
+```
+
+## Income needs
+```{r}
+tabyl(vic_mf$income_needs)
+
+vic_mf<- vic_mf %>% mutate(income_satisfy = case_when(
+  income_needs == 1 ~ "Very well",
+  income_needs == 2 ~ "Well", 
+  income_needs == 3 ~ "Not so well",
+  income_needs == 4 ~ "Not at all", 
+  income_needs == 77 ~ "I don't know/Prefer not to answer"
+))
+
+tabyl(vic_mf$income_satisfy)
+
+# Table
+
+t_in <- vic_mf %>%
+          group_by(wave_id, vic_mf$income_satisfy) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+
+kable(t_in)
+```
+
+## Bicycle Facility Preference - Path 
+```{r}
+tabyl(vic_mf$bike_comf_a)
+
+vic_mf <- vic_mf %>% mutate(path_comf = case_when(
+  bike_comf_a == 1 ~ "Very uncomfortable",
+  bike_comf_a == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_a == 3 ~ "Somewhat comfortable",
+  bike_comf_a == 4 ~ "Very comfortable"
+))
+
+vic_mf$path_comf <- factor(vic_mf$path_comf, c("Very uncomfortable", "Somewhat comfortable", "Very comfortable"))
+
+tabyl(vic_mf$path_comf)
+
+# Table
+
+t_bca <- vic_mf %>%
+          group_by(wave_id, vic_mf$path_comf) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bca)
+```
+
+## Bicycle Facility Preference - Residential street 
+```{r}
+tabyl(vic_mf$bike_comf_b)
+
+vic_mf <- vic_mf %>% mutate(residential_street_comf = case_when(
+  bike_comf_b == 1 ~ "Very uncomfortable",
+  bike_comf_b == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_b == 3 ~ "Somewhat comfortable",
+  bike_comf_b == 4 ~ "Very comfortable"
+))
+
+vic_mf$residential_street_comf <- factor(vic_mf$residential_street_comf, c("Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable"))
+tabyl(vic_mf$residential_street_comf)
+
+# Table
+
+t_bcb <- vic_mf %>%
+          group_by(wave_id, vic_mf$residential_street_comf) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bcb)
+```
+
+## Bicycle Facility Preference - Residential street with traffic calming measures
+```{r}
+tabyl(vic_mf$bike_comf_c)
+
+vic_mf <- vic_mf %>% mutate(res_street_traffic_calming_comf = case_when(
+  bike_comf_c == 1 ~ "Very uncomfortable",
+  bike_comf_c == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_c == 3 ~ "Somewhat comfortable",
+  bike_comf_c == 4 ~ "Very comfortable",
+  bike_comf_c == 77 ~ "I don't know/Prefer not to answer"
+))
+
+vic_mf$res_street_traffic_calming_comf <- factor(vic_mf$res_street_traffic_calming_comf, c( "Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable", "I don't know/Prefer not to answer"))
+tabyl(vic_mf$res_street_traffic_calming_comf)
+
+# Table
+
+t_bcc <- vic_mf %>%
+          group_by(wave_id, vic_mf$res_street_traffic_calming_comf) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bcc)
+```
+
+## Bicycle Facility Preference - Major Street with no bike lane 
+```{r}
+vic_mf <- vic_mf %>% mutate(major_street_no_bike_lane = case_when(
+  bike_comf_d == 1 ~ "Very uncomfortable",
+  bike_comf_d == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_d == 3 ~ "Somewhat comfortable",
+  bike_comf_d == 4 ~ "Very comfortable"
+))
+
+vic_mf$major_street_no_bike_lane <- factor(vic_mf$major_street_no_bike_lane, c("Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable"))
+
+# Table
+
+t_bcd <- vic_mf %>%
+          group_by(wave_id, vic_mf$major_street_no_bike_lane) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bcd)
+```
+
+## Bicycle Facility Preference - Major Street with bike lane 
+```{r}
+tabyl(vic_mf$bike_comf_e)
+
+vic_mf <- vic_mf %>% mutate(major_street_bike_lane = case_when(
+  bike_comf_e == 1 ~ "Very uncomfortable",
+  bike_comf_e == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_e == 3 ~ "Somewhat comfortable",
+  bike_comf_e == 4 ~ "Very comfortable"
+))
+
+vic_mf$major_street_bike_lane <- factor(vic_mf$major_street_bike_lane, c("Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable"))
+tabyl(vic_mf$major_street_bike_lane)
+
+# Table
+
+t_bce <- vic_mf %>%
+          group_by(wave_id, vic_mf$major_street_no_bike_lane) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bce)
+```
+
+## Bicycle Facility Preference - Major Street with separated bike lane 
+```{r}
+tabyl(vic_mf$bike_comf_f)
+
+vic_mf <- vic_mf %>% mutate(major_street_separated_bike_lane = case_when(
+  bike_comf_f == 1 ~ "Very uncomfortable",
+  bike_comf_f == 2 ~ "Somewhat uncomfortable", 
+  bike_comf_f == 3 ~ "Somewhat comfortable",
+  bike_comf_f == 4 ~ "Very comfortable",
+  bike_comf_f == 77 ~ "I don't know/Prefer not to answer"
+))
+
+vic_mf$major_street_separated_bike_lane <- factor(vic_mf$major_street_separated_bike_lane, c( "Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable", "I don't know/Prefer not to answer"))
+tabyl(vic_mf$major_street_separated_bike_lane)
+
+# Table
+
+t_bcf <- vic_mf %>%
+          group_by(wave_id, vic_mf$major_street_separated_bike_lane) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_bcf)
+```
+
+## Support for AAA
+### AAA Familiarity 
+```{r}
+tabyl(vic_mf$aaa_familiarity)
+
+vic_mf <- vic_mf %>% mutate(aaa_familiarity_1 = case_when(
+  aaa_familiarity == 1 ~ "Yes",
+  aaa_familiarity == 2 ~ "No"
+))
+
+tabyl(vic_mf$aaa_familiarity_1)
+
+# Table
+
+t_aaa_fam <- vic_mf %>%
+          group_by(wave_id, vic_mf$aaa_familiarity_1) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_aaa_fam)
+```
+
+## Familiarity AAA
+```{r}
+tabyl(vic_mf$aaa_familiarity_1)
+
+AAA_familiarity_plot <- ggplot(data = vic_mf, aes(aaa_familiarity_1)) +
+  geom_bar() +
+  labs(title = "All Ages and Abilities Cycling Network Familiarity",
+       x = "Yes/No",
+       y = "Number of Participants (n)") + 
+  facet_wrap(~ wave_id)
+plot(AAA_familiarity_plot)
+```
+
+## AAA Good idea
+```{r}
+tabyl(vic_mf$aaa_idea)
+
+vic_mf <- vic_mf %>% mutate(aaa_idea_1 = case_when(
+  aaa_idea == 1 ~ "Very good idea",
+  aaa_idea == 2 ~ "Somewhat good idea",
+  aaa_idea == 3 ~ "Somewhat bad idea",
+  aaa_idea == 4 ~ "Very bad idea",
+  aaa_idea == 77 ~ "I don't know"
+))
+
+vic_mf$aaa_idea_1 <- factor(vic_mf$aaa_idea_1, c("I don't know", "Very bad idea", "Somewhat bad idea", "Somewhat good idea", "Very good idea"))
+tabyl(vic_mf$aaa_idea_1)
+
+# Table
+
+t_aaa_idea <- vic_mf %>%
+          group_by(wave_id, vic_mf$aaa_idea_1) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_aaa_idea)
+```
+
+## AAA Idea
+```{r}
+AAA_idea_plot <- ggplot(data = vic_mf, aes(aaa_idea_1)) +
+  geom_bar() +
+  labs(title = "All Ages and Abilities Cycling Network Idea",
+       x = "AAA Idea",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1)) + 
+  facet_wrap(~ wave_id)
+plot(AAA_idea_plot)
+```
+
+## AAA Cycle More
+```{r}
+tabyl(vic_mf$aaa_bike_more)
+
+vic_mf <- vic_mf %>% mutate(aaa_bike_more_1 = case_when(
+  aaa_bike_more == 1 ~ "Yes",
+  aaa_bike_more == 2 ~ "No"
+))
+
+tabyl(vic_mf$aaa_bike_more_1)
+
+# Table
+
+t_abm <- vic_mf %>%
+          group_by(wave_id, vic_mf$aaa_bike_more_1) %>%
+            summarise(n = n()) %>%
+            mutate(pct = n / sum(n))
+kable(t_abm)
+```
+
+## AAA Bike More
+```{r}
+AAA_bike_more_plot <- ggplot(data = vic_mf, aes(aaa_bike_more_1)) +
+  geom_bar() +
+  labs(title = "All Ages and Abilities Cycling Network Bike More",
+       x = "AAA Bike More",
+       y = "Number of Participants (n)") +
+  facet_wrap(~ wave_id)
+plot(AAA_bike_more_plot)
+```
+
+## Plotting separated 
+```{r}
+# Factor
+vic_mf$major_street_separated_bike_lane <- factor(vic_mf$major_street_separated_bike_lane, c( "Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable", "I don't know/Prefer not to answer"))
+
+# Plot
+separated_preference <- ggplot(data = vic_mf, aes(major_street_separated_bike_lane)) +
+  geom_bar() +
+  labs(title = "Preference for Major Street with Separated Bike Lane",
+       x = "Level of Preference",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=45, hjust=1)) + 
+  facet_wrap(~wave_id)
+plot(separated_preference)
+```
+
+## Checking self-report exposure
+
+# Pandora
+```{r}
+tabyl(victoria_new_ID_gps$vicroads_f)
+#86% bike on pandora 
+```
+
+# Johnson street
+
+# Wharf street
+
+# Fort street
+
+## Self-report Physical Activity Data - Total PA - Outcome Variable 
+
+## Physical Activity - Cycling 
+```{r}
+tabyl(victoria_new_ID_gps$travel_bike)
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "Cycling_formula" = 6 * travel_bike_freq * travel_bike)
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "Walking_formula" = 3.3 * travel_walk_freq * travel_walk)
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "Total_transport_formula" = Cycling_formula + Walking_formula)
+```
+
+## Plotting PA
+```{r}
+PA_cycling_plot <- ggplot (data = victoria_new_ID_gps, aes(Cycling_formula)) + 
+    geom_density(aes(fill = gender), position = "dodge", alpha = 0.5) + 
+      labs(title = "Cycling for Transport Physical Activity", 
+          x = "Cycling MET Minutes of Physical Activity", 
+          y = "Percent of Participants")
+plot(PA_cycling_plot)
+```
+
+## Adding normal distribution to PA plot 
+```{r}
+victoria_new_ID_gps$Cycling_formula <- as.numeric(victoria_new_ID_gps$Cycling_formula)
+
+PA_cycling_normal_plot  <- PA_cycling_plot +
+  stat_function(fun = dnorm, args = list(mean = mean(victoria_new_ID_gps$Cycling_formula, na.rm = TRUE), sd =sd(victoria_new_ID_gps$Cycling_formula, na.rm = TRUE)), color = "red", size = 1)
+plot(PA_cycling_normal_plot)
+```
+
+## Descriptive Stats for Cycling PA
+```{r}
+summary(victoria_new_ID_gps$Cycling_formula)
+describeBy(victoria_new_ID_gps$Cycling_formula)
+describeBy(victoria_new_ID_gps$Cycling_formula, victoria_merged_filter$gender)
+
+tabyl(victoria_new_ID_gps$Cycling_formula)
+```
+
+## Work - Vigorous 
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "work_formula" = 8 * work_vigpa * work_vigpa_freq)
+tabyl(victoria_new_ID_gps$work_formula)
+```
+
+## Travel Walking 
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "travel_walk_formula" = 3.3 * travel_walk_freq * travel_walk)
+tabyl(victoria_new_ID_gps$travel_walk_formula)
+```
+
+## Leisure Walking
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "leisure_walk_formula" = 3.3 * leisure_walk_freq * leisure_walk)
+tabyl(victoria_new_ID_gps$leisure_walk_formula)
+```
+
+## Total Walking MET-minutes/week
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "total_walk_formula" = leisure_walk_formula + travel_walk_formula)
+tabyl(victoria_new_ID_gps$total_walk_formula)
+```
+
+## Moderate Leisure
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "mod_leisure_formula" = 4* modpa_leisure_freq + modpa_leisure)
+tabyl(victoria_new_ID_gps$mod_leisure_formula)
+```
+
+Vigorous Leisure
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "vig_leisure_formula" = 8* leisure_vigpa_freq + leisure_vigpa)
+tabyl(victoria_new_ID_gps$vig_leisure_formula)
+```
+
+## Total Leisure 
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "total_leisure_formula" = leisure_walk_formula + mod_leisure_formula + vig_leisure_formula)
+tabyl(victoria_new_ID_gps$total_leisure_formula)
+```
+
+# Convert to Minutes of MVPA
+
+## Total Moderate MET-minutes/week
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "total_moderate_met_formula" = mod_leisure_formula + Cycling_formula)
+tabyl(victoria_new_ID_gps$total_moderate_met_formula)
+```
+
+## Total Vigorous MET-minutes/week
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "total_vigorous_met_formula" = work_formula + vig_leisure_formula)
+tabyl(victoria_new_ID_gps$total_vigorous_met_formula)
+```
+
+## Total physical activity MET-minutes/week
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "total_pa_met_formula" = total_leisure_formula + total_moderate_met_formula + total_vigorous_met_formula)
+tabyl(victoria_new_ID_gps$total_pa_met_formula)
+```
+
+## Plot
+```{r}
+PA_total_plot <- ggplot (data = victoria_new_ID_gps, aes(total_pa_met_formula)) + 
+    geom_density() + theme_bw()
+    
+plot(PA_total_plot)
+```
+
+##Determining the proportion of cycling PA in total PA
+```{r}
+victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "proportion_PA" = (Cycling_formula/total_pa_met_formula)*100)
+tabyl(victoria_new_ID_gps$proportion_PA)
+
+PA_proportion_plot <- ggplot (data = victoria_new_ID_gps, aes(proportion_PA)) + 
+    geom_density() + theme_bw()
+    
+plot(PA_proportion_plot)
+```
+
+## Filter data to get just GPS participants
+```{r}
+victoria_gps_only <- dplyr::filter(victoria_new_ID_gps, gps_checker == 1) #maybe should do this once all of the variables are added. come back and run at bottom
+tabyl(victoria_gps_only$gps_checker)
+##should also write a new csv with 1. all survey participants and 2. gps participants
+```
+
+## Write CSV
+```{r}
+write_csv(victoria_gps_only, "victoria_gps_only.csv")
+write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv")
+```
+
+```{r}
+victoria_new_ID_GPS <- read_csv("victoria_new_ID_gps.csv")
+```
+
+## Car Access
+```{r}
+tabyl(victoria_new_ID_gps$car_access)
+
+victoria_new_ID_gps <- victoria_new_ID_gps %>% mutate(car_access_1 = case_when(
+  car_access == 1 ~ "Yes",
+  car_access == 2 ~ "No"
+))
+tabyl(victoria_new_ID_gps$car_access_1)
+tabyl(victoria_new_ID_gps$cars_household)
+```
+
+## Percieved Cycling Safety in Victoria
+```{r}
+victoria_new_ID_gps <- victoria_new_ID_gps %>% mutate(bike_safety_1 = case_when(
+  bike_safety == 1 ~ "Very safe",
+  bike_safety == 2 ~ "Somewhat safe",
+  bike_safety == 3 ~ "Neither safe nor unsafe",
+  bike_safety == 4 ~ "Somewhat dangerous",
+  bike_safety == 5 ~ "Very dangerous",
+))
+tabyl(victoria_new_ID_gps$bike_safety_1)
+
+victoria_new_ID_gps$bike_safety_1 <- factor(victoria_new_ID_gps$bike_safety_1, c( "Very safe", "Somewhat safe", "Neither safe nor unsafe", "Somewhat dangerous", "Very dangerous"))
+tabyl(victoria_new_ID_gps$bike_safety_1)
+```
+
+## Bike frequency by season
+```{r}
+tabyl(victoria_new_ID_gps$bike_freq_a)
+summary(victoria_new_ID_gps$bike_freq_a)
+sd(victoria_new_ID_gps$bike_freq_a)
+tabyl(victoria_new_ID_gps$bike_freq_b)
+summary(victoria_new_ID_gps$bike_freq_b)
+sd(victoria_new_ID_gps$bike_freq_b, na.rm = TRUE)
+tabyl(victoria_new_ID_gps$bike_freq_c)
+summary(victoria_new_ID_gps$bike_freq_c)
+sd(victoria_new_ID_gps$bike_freq_c)
+tabyl(victoria_new_ID_gps$bike_freq_d)
+summary(victoria_new_ID_gps$bike_freq_d)
+sd(victoria_new_ID_gps$bike_freq_d, na.rm = TRUE)
+```
+
+## Bike More
+```{r}
+tabyl(victoria_new_ID_gps$bike_more)
+```
+
+## Cycling Streets #not sure if this is important
+```{r}
+tabyl(victoria_new_ID_gps$vicroads_a)
+tabyl(victoria_new_ID_gps$vicroads_b)
+tabyl(victoria_new_ID_gps$vicroads_c)
+tabyl(victoria_new_ID_gps$vicroads_d)
+tabyl(victoria_new_ID_gps$vicroads_e)
+tabyl(victoria_new_ID_gps$vicroads_f)
+tabyl(victoria_new_ID_gps$vicroads_g)
+tabyl(victoria_new_ID_gps$vicroads_h)
+tabyl(victoria_new_ID_gps$vicroads_i)
+```
+
+## Belonging to a cycling club
+```{r}
+tabyl(victoria_new_ID_gps$bike_advocacy)
+tabyl(victoria_new_ID_gps$cycling_club)
+```
+
+## Gender Analysis
+```{r}
+CrossTable(victoria_new_ID_GPS$aaa_bike_more, victoria_new_ID_gps$gender)
+tabyl(victoria_new_ID_GPS$gender_vic.y)
+```

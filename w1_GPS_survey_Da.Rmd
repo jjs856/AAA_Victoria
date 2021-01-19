@@ -1,0 +1,198 @@
+---
+title: "W1_GPS_survey_DA"
+author: "Jonathan Slaney"
+date: "12/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Packages
+```{r}
+library(lmtest)
+library(tidyverse)
+library(ggplot2)
+library(haven)
+library(janitor)
+library(pastecs)
+library(psych)
+library(car)
+library(Hmisc)
+library(ggm)
+library(polycor)
+library(tableone)
+library(forcats)
+library(gmodels)
+library(QuantPsyc)
+library(KernSmooth)
+library(raster)
+library(sp)
+library(sf)
+```
+
+## Loading in Data
+```{r}
+## Load in W1 + w2 merged data
+victoria_small_merged_1 <- read_csv("victoria_small_merged_1.csv")
+```
+
+## Age descriptive Statistics for Victoria
+```{r}
+summary(victoria_small_merged_1$age_calculated, na.rm = TRUE)
+
+sd(victoria_small_merged_1$age_calculated)
+
+```
+
+## Age descriptive Statistics for Victoria
+```{r}
+age_categories_plot <- ggplot (data = victoria_small_merged_1, aes(age_categories)) + 
+    geom_bar() + 
+        labs(title = "Age ", 
+           x = "Age Categories", 
+            y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1))
+plot(age_categories_plot)
+```
+
+## Gender
+```{r}
+tabyl(victoria_small_merged_1$gender)
+
+gender_plot <- ggplot(data = victoria_small_merged_1, aes(gender)) +
+  geom_bar(aes(fill = gender)) +
+  labs(title = "Gender",
+       x = "Gender Type",
+       y = "Number of Participants (n)")
+plot(gender_plot)
+```
+
+## Health Status
+```{r}
+victoria_small_merged_1$health_status <- factor(victoria_small_merged_1$health_status, c("Poor", "Fair", "Good", "Very Good", "Excellent"))
+tabyl(victoria_small_merged_1$health_status)
+
+health_plot <- ggplot(data = victoria_small_merged_1, aes(health_status)) +
+  geom_bar() +
+  labs(title = "Health Status",
+       x = "Health Status",
+       y = "Number of Participants (n)") 
+plot(health_plot)
+```
+
+## Marital Status
+```{r}
+tabyl(victoria_small_merged_1$marital)
+marital_plot <- ggplot(data = victoria_small_merged_1, aes(marital)) +
+  geom_bar() +
+  labs(title = "Marital Status",
+       x = "Marital Status",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1))
+plot(marital_plot)
+```
+
+## Ethnicity 
+```{r}
+tabyl(victoria_small_merged_1$ethnicity)
+ethnicity_plot <- ggplot(data = victoria_small_merged_1, aes(ethnicity)) +
+  geom_bar() +
+  labs(title = "Ethnicity",
+       x = "Ethnic Group",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1))
+plot(ethnicity_plot)
+```
+
+## Income
+```{r}
+
+victoria_small_merged_1$income_1 <- factor(victoria_small_merged_1$income_1, c("No income", "$1 to $9,999", "$10,000 to $14,999", "$15,000 to $19,999", "$20,000 to $29,999", "$30,000 to $39,999", "$40,000 to $49,999","$50,000 to $99,999","$100,000 to $149,999","$150,000 to $199,999", "$200,000 or more", "I don't know/Prefer not to answer"))
+
+tabyl(victoria_small_merged_1$income_1)
+
+
+income_plot <- ggplot(data = victoria_small_merged_1, aes(income_1)) +
+  geom_bar() +
+  labs(title = "Income",
+       x = "Income Level",
+       y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=60, hjust=1))
+plot(income_plot)
+
+tabyl(victoria_small_merged_1$income_2)
+```
+
+## Children 
+```{r}
+tabyl(victoria_small_merged_1$children_1)
+```
+
+## Born in Canada
+```{r}
+tabyl(victoria_small_merged_1$born_canada)
+```
+
+## Car Access
+```{r}
+tabyl(victoria_small_merged_1$car_access)
+
+victoria_small_merged_1 <- victoria_small_merged_1 %>% mutate(car_access_1 = case_when(
+  car_access == 1 ~ "Yes",
+  car_access == 2 ~ "No"
+))
+tabyl(victoria_small_merged_1$car_access_1)
+
+```
+
+## Support for the AAA
+```{r}
+tabyl(victoria_small_merged_1$aaa_familiarity_1)
+
+victoria_small_merged_1$aaa_idea_1 <- factor(victoria_small_merged_1$aaa_idea_1, c("I don't know", "Very bad idea", "Somewhat bad idea", "Somewhat good idea", "Very good idea"))
+tabyl(victoria_small_merged_1$aaa_idea_1)
+tabyl(victoria_small_merged_1$aaa_bike_more_1)
+```
+
+##Preference for Separated Bike Lane
+```{r}
+victoria_small_merged_1$major_street_separated_bike_lane <- factor(victoria_small_merged_1$major_street_separated_bike_lane, c( "Very uncomfortable", "Somewhat uncomfortable", "Somewhat comfortable", "Very comfortable", "I don't know/Prefer not to answer"))
+tabyl(victoria_small_merged_1$major_street_separated_bike_lane)
+```
+
+## Percieved Cycling Safety in Victoria
+```{r}
+victoria_small_merged_1 <- victoria_small_merged_1 %>% mutate(bike_safety_1 = case_when(
+  bike_safety == 1 ~ "Very safe",
+  bike_safety == 2 ~ "Somewhat safe",
+  bike_safety == 3 ~ "Neither safe nor unsafe",
+  bike_safety == 4 ~ "Somewhat dangerous",
+  bike_safety == 5 ~ "Very dangerous",
+))
+tabyl(victoria_small_merged_1$bike_safety_1)
+
+victoria_small_merged_1$bike_safety_1 <- factor(victoria_small_merged_1$bike_safety_1, c( "Very safe", "Somewhat safe", "Neither safe nor unsafe", "Somewhat dangerous", "Very dangerous"))
+tabyl(victoria_small_merged_1$bike_safety_1)
+```
+
+## Bike frequency by season
+```{r}
+summary(victoria_small_merged_1$bike_freq_a)
+sd(victoria_small_merged_1$bike_freq_a)
+
+summary(victoria_small_merged_1$bike_freq_b)
+sd(victoria_small_merged_1$bike_freq_b, na.rm = TRUE)
+
+summary(victoria_small_merged_1$bike_freq_c)
+sd(victoria_small_merged_1$bike_freq_c)
+
+summary(victoria_small_merged_1$bike_freq_d)
+sd(victoria_small_merged_1$bike_freq_d, na.rm = TRUE)
+```
+
+## Cycing infrastructure preference
+```{r}
+tabyl(victoria_small_merged_1$path_comf)
+tabyl(victoria_small_merged_1$residential_street_comf)
+tabyl(victoria_small_merged_1$res_street_traffic_calming_comf)
+tabyl(victoria_small_merged_1$major_street_no_bike_lane)
+tabyl(victoria_small_merged_1$major_street_bike_lane)
+```
