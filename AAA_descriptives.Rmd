@@ -35,35 +35,28 @@ library(kableExtra)
 
 ## Reading in Data
 ```{r}
-## Do 2 files at a time. Try full_join or inner.
-## Get new files from FZ at interact/data_snapshots/Treksoft_surveys_2020-12-03_1884baf.zip
-
 # W1
-victoria_new <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
-victoria_eligibility <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
+vh_1 <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
+ve_1 <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
 
 # W2
 vh_2 <- read_csv("~/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
 vh_2_new <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
-
-ve_2_new<- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
 ve_2 <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
+ve_2_new<- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
 ```
 
-## Create new variable new and returning in w2
+## Create new variable new and returning participation level
 
 ```{r}
-# Add variable to victoria_new for new (1)
+vh_1 %>% mutate(participation = 1) # Add variable to victoria health w1 (1)
+ve_1 %>% mutate(participation = 1) # Add variable to victoria eligibility w1 (1)
 
-# Same for victoria_eligibility
+vh_2 %>% mutate(participation = 2.5)# Add variable for vh_2 returning 2 = (2.5)
+vh_2_new %>% mutate(participation = 2) # Add variable for vh_2_new = (2)
 
-# Add variable for vh_2 returning 2 = (1.5)
-
-# Add variable for vh_2_new  = (2)
-
-# Add variable for ve_2 returning = (1.5)
-
-# Add variable for ve_2_new = (20)
+ve_2 %>% mutate(participation = 2.5) # Add variable for ve_2  = (2.5)
+ve_2_new %>% mutate(participation = 2) # Add a variable for ve_2_new (2)
 ```
 
 # Merge W1 and W2 data
@@ -71,15 +64,26 @@ ve_2 <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligi
 ```{r}
 
 # Merge w1
-w1 <- full_join(victoria_new, victoria_eligibility) # Got all 281 participants, but delete the 27 duds
-w1 <- w1[-(282:308),]
+w1 <- full_join(vh_1, ve_1) # Got all 281 participants, but delete the 27 duds
+w1 <- w1[-(282:403),]
 
-# Merge w1 and w2
-w2e <- full_join(victoria_eligibility_new_two, victoria_eligibility_two)
-w2e <- w2e[-(282:315),] 
-# Clean and pretty. n = 287 w2. Now to combine.
+# Merge w2 e and h
+w2e <- full_join(ve_2, ve_2_new)
 
-vm <- bind_rows(w2h, w2e, .id = "interact_id") #merging
+#w2e <- w2e[-(282:315),]
+w2h <- full_join(vh_2, vh_2_new)
+
+## Now what? haha
+# bind_rows just stacks everything, doesn't combine data for one participant (2-3 rows per participant)
+# full_join by "interact_id" returns n=405 with data for only the first 281.
+
+# Dan sample code
+#canale$from_canale <- 1
+#census_data$from_census <- 1
+#census_data <- inner_join(census_data, canale, by = c(“GeoUID” = “dauid”))
+#table(census_data$from_canale, census_data$from_census)
+
+vm <- bind_rows(w1, w2h, w2e, .id = "interact_id") #merging
 vic_mf <- filter(victoria_merged, transp_bikes_adults >= 0) #filtering for participants who did eligibility but didn't complete the health survey
 ```
 
