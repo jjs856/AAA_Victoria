@@ -76,6 +76,7 @@ w2h <- full_join(vh_2, vh_2_new)
 ## Now what? haha
 # bind_rows just stacks everything, doesn't combine data for one participant (2-3 rows per participant)
 # full_join by "interact_id" returns n=405 with data for only the first 281.
+# left_join retains n = 281 or right_join only retains the n= 287. 
 
 # Dan sample code
 #canale$from_canale <- 1
