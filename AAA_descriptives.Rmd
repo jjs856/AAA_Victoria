@@ -36,56 +36,70 @@ library(kableExtra)
 ## Reading in Data
 ```{r}
 # W1
-vh_1 <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
-ve_1 <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
+
+### /Users/dfuller/Documents/INTERACT 
+### ~/INTERACT/data/  
+
+vh_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
+ve_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
 
 # W2
-vh_2 <- read_csv("~/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
-vh_2_new <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
-ve_2 <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
-ve_2_new<- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
+vh_2 <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
+vh_2_new <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
+ve_2 <- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
+ve_2_new<- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
 ```
 
 ## Create new variable new and returning participation level
 
 ```{r}
-vh_1 %>% mutate(participation = 1) # Add variable to victoria health w1 (1)
-ve_1 %>% mutate(participation = 1) # Add variable to victoria eligibility w1 (1)
+vh_1 <- vh_1 %>% mutate(participation = "w1") # Add variable to victoria health w1 (1)
+ve_1 <- ve_1 %>% mutate(participation = "w1") # Add variable to victoria eligibility w1 (1)
 
-vh_2 %>% mutate(participation = 2.5)# Add variable for vh_2 returning 2 = (2.5)
-vh_2_new %>% mutate(participation = 2) # Add variable for vh_2_new = (2)
+vh_2 <- vh_2 %>% mutate(participation = "w2_returning")# Add variable for vh_2 returning 2 = (2.5)
+vh_2_new <- vh_2_new %>% mutate(participation = "w2_new") # Add variable for vh_2_new = (2)
 
-ve_2 %>% mutate(participation = 2.5) # Add variable for ve_2  = (2.5)
-ve_2_new %>% mutate(participation = 2) # Add a variable for ve_2_new (2)
+ve_2 <- ve_2 %>% mutate(participation = "w2_returning") # Add variable for ve_2  = (2.5)
+ve_2_new <- ve_2_new %>% mutate(participation = "w2_new") # Add a variable for ve_2_new (2)
 ```
 
 # Merge W1 and W2 data
 
 ```{r}
 
-# Merge w1
-w1 <- full_join(vh_1, ve_1) # Got all 281 participants, but delete the 27 duds
-w1 <- w1[-(282:403),]
+# Merge w1 health and eligibility
+w1 <- full_join(vh_1, ve_1, by = "interact_id") # Got all 281 participants, but delete the 27 duds
 
-# Merge w2 e and h
-w2e <- full_join(ve_2, ve_2_new)
+table(w1$participation_vh_1, w1$participation_ve_1)
 
-#w2e <- w2e[-(282:315),]
-w2h <- full_join(vh_2, vh_2_new)
+w1 <- w1[-(282:308),]
 
-## Now what? haha
-# bind_rows just stacks everything, doesn't combine data for one participant (2-3 rows per participant)
-# full_join by "interact_id" returns n=405 with data for only the first 281.
-# left_join retains n = 281 or right_join only retains the n= 287. 
+# Combine w2 e and w2 new e
+w2e <- bind_rows(ve_2, ve_2_new)
 
-# Dan sample code
-#canale$from_canale <- 1
-#census_data$from_census <- 1
-#census_data <- inner_join(census_data, canale, by = c(“GeoUID” = “dauid”))
-#table(census_data$from_canale, census_data$from_census)
+table(w2e$participation)
 
-vm <- bind_rows(w1, w2h, w2e, .id = "interact_id") #merging
-vic_mf <- filter(victoria_merged, transp_bikes_adults >= 0) #filtering for participants who did eligibility but didn't complete the health survey
+# Combine w2 e and w2 new e
+w2h <- bind_rows(vh_2, vh_2_new)
+
+table(w2h$participation)
+
+# Merge w2 health and eligibility
+w2 <- full_join(w2e, w2h, by = "interact_id") # 
+
+# Combine W1 and W2 data
+
+victoria_data <- bind_rows(w1, w2)
+
+table(victoria_data$wave_id.x)
+
+### We have 281 in wave 1 and 315 in wave 2. That's correct. 
+
+table(victoria_data$participation.x)
+
+table(victoria_data$participation.y)
+
+### We have 281 from w1, 123 returning in w2 and 164 new in W2
 ```
 
 
