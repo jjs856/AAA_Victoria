@@ -38,7 +38,7 @@ library(kableExtra)
 # W1
 
 ### /Users/dfuller/Documents/INTERACT 
-### ~/INTERACT/data/  
+### ~/INTERACT/data/
 
 vh_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
 ve_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
@@ -69,39 +69,48 @@ ve_2_new <- ve_2_new %>% mutate(participation = "w2_new") # Add a variable for v
 
 # Merge w1 health and eligibility
 w1 <- full_join(vh_1, ve_1, by = "interact_id") # Got all 281 participants, but delete the 27 duds
+w1 <- w1[-(282:308),]
 
 table(w1$participation_vh_1, w1$participation_ve_1)
+w1 <- w1 %>% rename(gender = gender_vic.x)
+w1 <- w1 %>% rename(
+         gender_vic_1 = gender_vic_1.x, 
+         gender_vic_2 = gender_vic_2.x, 
+         gender_vic_3 = gender_vic_3.x,
+         gender_vic_4 = gender_vic_4.x
+                    )
 
-w1 <- w1[-(282:308),]
+#w1$gender <- as.numeric(w1$gender) # Try another method. This changes all to NAs
 
 # Combine w2 e and w2 new e
 w2e <- bind_rows(ve_2, ve_2_new)
 
 table(w2e$participation)
 
-# Combine w2 e and w2 new e
+# Combine w2 h and w2 new h
 w2h <- bind_rows(vh_2, vh_2_new)
 
 table(w2h$participation)
 
 # Merge w2 health and eligibility
-w2 <- full_join(w2e, w2h, by = "interact_id") # 
+w2 <- full_join(w2e, w2h, by = "interact_id")
 
 # Combine W1 and W2 data
+vic_mf <- bind_rows(w1, w2)
 
-victoria_data <- bind_rows(w1, w2)
+vic_mf <- vic_mf %>% 
+  rename(wave_id = wave_id.x)
 
-table(victoria_data$wave_id.x)
+table(vic_mf$wave_id)
 
 ### We have 281 in wave 1 and 315 in wave 2. That's correct. 
 
-table(victoria_data$participation.x)
+table(vic_mf$participation.x)
 
-table(victoria_data$participation.y)
+table(vic_mf$participation.y)
 
 ### We have 281 from w1, 123 returning in w2 and 164 new in W2
 ```
-
 
 ## Reading in SD data
 ```{r}
@@ -110,41 +119,6 @@ SD_vic_two <- read_csv("~/INTERACT/SenseDoc/victoria_02_top_1min.csv") # read in
 SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
 
 table(SD_vic_two$interact_id)
-```
-
-## Changing column names and selecting important columns and filtering data
-
-```{}
-ID_relationship <- mutate(ID_relationship, ID_data = 1)
-
-#changing column names to match other data sets and make them easier to work with in R
-colnames(ID_relationship)[colnames(ID_relationship) == "INTERACT ID"] <- "interact_id"
-#colnames(ID_relationship)[colnames(ID_relationship) == "Sensedoc ID"] <- "sensedoc_ID"
-#colnames(ID_relationship)[colnames(ID_relationship) == "Ethica ID"] <- "ethica_ID"
-
-ID_relationship_1 <- dplyr::select(ID_relationship, "interact_id", "sensedoc_ID", "ethica_ID", "ID_data", "treksoft_id") #selecting only the important columns
-
-typeof(ID_relationship_1$treksoft_id)
-as.numeric(ID_relationship_1$treksoft_id)
-
-ID_relationship_2 <- ID_relationship_1 %>% mutate(NA_checker = case_when(
-  treksoft_id < 908 ~ "1",
-  treksoft_id == 908 ~ "2",
-  treksoft_id > 908 ~ "1"
-)) #participant 908 didn't complete the health survey and was giving alot of problems so we filtered 908 out. 
-
-ID_relationship_3 <- ID_relationship_2 %>% filter(NA_checker == 1) #brings it down to the 308 people who completed eligibility survey
-```
-
-## GPS linking data: changing column names, selecting out important data and working with NA
-```{}
-#changing column names to match other data sets and make them easier to work with in R 
-colnames(gps_ID_relationship)[colnames(gps_ID_relationship)== "interact_id"] <- "gps_id" #changed this INTERACT ID to GPS ID since this is actually the gps ID not the INTERACT ID's that Karen assigned. 
-colnames(gps_ID_relationship)[colnames(gps_ID_relationship)== "sensedoc_id"] <- "sensedoc_ID"
-
-gps_ID_relationship <- dplyr::select(gps_ID_relationship, "gps_id", "sensedoc_ID")  #selecting only the important columns. The treksoft ID and ethica in this file were not complete
-
-gps_ID_relationship_1 <- mutate(gps_ID_relationship, gps_checker = 1) 
 ```
 
 ## Joining Data
@@ -175,7 +149,7 @@ t_age <- vic_mf %>%
           group_by(wave_id, vic_mf$age) %>%
             summarise(n = n())
 
-kable(t_age)  %>%   kable_styling(bootstrap_options = "striped", full_width = T, position = "left")
+kable(t_age)
 ```
 
 ## Age Categories (using stats can age groups)
@@ -203,7 +177,7 @@ typeof(vic_mf_age$age_categories)
 t_age_cats <- vic_mf_age %>%
           group_by(wave_id, vic_mf_age$age_categories) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_age_cats)
 ```
@@ -212,7 +186,7 @@ kable(t_age_cats)
 age_categories_plot <- ggplot (data = vic_mf_age, aes(age_categories)) + 
     geom_bar() + 
         labs(title = "AAA Victoria Age distribution", 
-           x = "Age Categories", 
+           x = "Age Categories",
             y = "Number of Participants (n)") + theme(axis.text.x = element_text(angle=0, hjust=1)) + 
   facet_wrap(~ wave_id)
 plot(age_categories_plot)
@@ -233,7 +207,7 @@ plot(age_histogram)
 ```{r}
 vic_mf <- vic_mf %>% mutate(gender = case_when(
   gender_vic_1 == 1 ~ "Men",
-  gender_vic_2 == 1 ~ "Women", 
+  gender_vic_2 == 1 ~ "Women",
   gender_vic_3 == 1 ~ "Trans or gender non-binary",
   gender_vic_4 == 1 ~ "Trans or gender non-binary"
 ))
