@@ -79,17 +79,15 @@ w1 <- w1 %>% rename(
          gender_vic_3 = gender_vic_3.x,
          gender_vic_4 = gender_vic_4.x
                     )
-
-#w1$gender <- as.numeric(w1$gender) # Try another method. This changes all to NAs
+sapply(w1, class)
+w1$gender = as.numeric(as.factor(w1$gender))
 
 # Combine w2 e and w2 new e
 w2e <- bind_rows(ve_2, ve_2_new)
-
 table(w2e$participation)
 
 # Combine w2 h and w2 new h
 w2h <- bind_rows(vh_2, vh_2_new)
-
 table(w2h$participation)
 
 # Merge w2 health and eligibility
@@ -97,7 +95,6 @@ w2 <- full_join(w2e, w2h, by = "interact_id")
 
 # Combine W1 and W2 data
 vic_mf <- bind_rows(w1, w2)
-
 vic_mf <- vic_mf %>% 
   rename(wave_id = wave_id.x)
 
@@ -138,7 +135,6 @@ write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv") #writing CSV
 
 ## Age descriptive statistics for Vic - Health and Eligibility surveys
 ```{r}
-
 ## calculate age
 summary(vic_mf$age, na.rm = TRUE)
 sd(vic_mf$age)
@@ -205,12 +201,16 @@ plot(age_histogram)
 
 ## Gender Victoria
 ```{r}
+### Code for 1, 2, 3, 4, 6
 vic_mf <- vic_mf %>% mutate(gender = case_when(
-  gender_vic_1 == 1 ~ "Men",
-  gender_vic_2 == 1 ~ "Women",
-  gender_vic_3 == 1 ~ "Trans or gender non-binary",
-  gender_vic_4 == 1 ~ "Trans or gender non-binary"
+  gender == 1 ~ "Men",
+  gender == 2 ~ "Women",
+  gender == 3 ~ "Trans Man",
+  gender == 4 ~ "Trans Woman", 
+  gender == 5 ~ "Genderqueer", 
+  gender == 6 ~ "Other Identity"
 ))
+
 
 tabyl(vic_mf$gender)
 
