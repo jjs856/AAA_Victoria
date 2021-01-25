@@ -148,6 +148,14 @@ t_age <- vic_mf %>%
 kable(t_age)
 ```
 
+## W2 Age
+
+```{r}
+summary(w2$age, na.rm = TRUE)
+sd(w2$age, na.rm = TRUE)
+```
+
+
 ## Age Categories (using stats can age groups)
 ```{r}
 vic_mf_age <- vic_mf %>% mutate(age_categories = case_when(
@@ -192,8 +200,8 @@ plot(age_categories_plot)
 ```{r}
 age_histogram <- ggplot (data = vic_mf, aes(age)) + 
     geom_histogram(aes(y = ..density..), color = "black", binwidth = 0.9) + 
-      labs(title = "Barriers to Exercise ", 
-          x = "Barriers to Exercise Score", 
+      labs(title = "Barriers to Exercise ",
+          x = "Barriers to Exercise Score",
           y = "Density (% of Participants)") + 
   facet_wrap(~ wave_id)
 plot(age_histogram)
@@ -201,7 +209,6 @@ plot(age_histogram)
 
 ## Gender Victoria
 ```{r}
-### Code for 1, 2, 3, 4, 6
 vic_mf <- vic_mf %>% mutate(gender = case_when(
   gender == 1 ~ "Men",
   gender == 2 ~ "Women",
@@ -210,7 +217,6 @@ vic_mf <- vic_mf %>% mutate(gender = case_when(
   gender == 5 ~ "Genderqueer", 
   gender == 6 ~ "Other Identity"
 ))
-
 
 tabyl(vic_mf$gender)
 
@@ -251,7 +257,7 @@ vic_mf <- vic_mf %>% mutate(housing = case_when(
   house_tenure == 5 ~ "Other"
 ))
 
-vic_mf$housing <- factor(vic_mf$housing, c("Other", "Resident not with friends or relatives", "Resident with friends or relatives", "Tenant", "Owner")) 
+vic_mf$housing <- factor(vic_mf$housing, c("Other", "Resident not with friends or relatives", "Resident with friends or relatives", "Tenant", "Owner"))
 tabyl(vic_mf$housing)
 
 # Table
@@ -319,7 +325,7 @@ tabyl(vic_mf$health_status)
 t_healthy <- vic_mf %>%
           group_by(wave_id, vic_mf$health_status) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_healthy)
 ```
@@ -355,7 +361,7 @@ tabyl(vic_mf$marital)
 t_wed <- vic_mf %>%
           group_by(wave_id, vic_mf$marital) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_wed)
 ```
