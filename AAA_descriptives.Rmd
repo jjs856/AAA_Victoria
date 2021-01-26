@@ -115,21 +115,48 @@ SD_vic_one <- read_csv("~/INTERACT/SenseDoc/victoria_01_top_1min.csv") # read in
 SD_vic_two <- read_csv("~/INTERACT/SenseDoc/victoria_02_top_1min.csv") # read in SD w2 participants n = 153
 SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
 
-table(SD_vic_two$interact_id)
+tabyl(SD_vic_two$interact_id)
 ```
 
 ## Joining Data
-```{}
+```{r}
 #merged_ID <- left_join(ID_relationship_3, gps_ID_relationship_1, by = "sensedoc_ID") #merging both ID relationship files together using Sensedoc ID - common variable in both files
 #merged_ID_gps <- filter(merged_ID, gps_checker == 1) #filtering to just get the IDS for participants who did GPS analysis. If you leave everybody, then you have to deal with NA issues
 #tabyl(merged_ID$gps_checker)
 #tabyl(merged_ID$gps_checker)
 
-victoria_complete <- left_join(victoria_merged_filter, SD_vic_all, .id = "interact_id") #merging health/eligibility with SD
+vc <- left_join(vic_mf, SD_vic_all, .id = "interact_id") #merging health/eligibility with SD
 
-tabyl(victoria_new_ID_gps$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly. 
-write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv") #writing CSV
+tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly. 
+#write_csv(vic_mf, "victoria_new_ID_gps.csv") #writing CSV
 ```
+
+## SD subsample w2
+
+```{r}
+## Age
+SD_vic_two <- subset(SD_vic_two, age > 20)##Subset to remove -1s
+summary(SD_vic_two$age, na.rm = TRUE)
+sd(SD_vic_two$age, na.rm = TRUE)
+
+## Gender
+tabyl(SD_vic_two$gender)
+## Ethnicity
+
+## Born in Can
+
+## Income
+
+## Marital Status
+
+## Health Status
+
+## Children
+
+## Car Access
+
+```
+
 
 ## Descriptive Statistics
 
@@ -137,7 +164,7 @@ write_csv(victoria_new_ID_gps, "victoria_new_ID_gps.csv") #writing CSV
 ```{r}
 ## calculate age
 summary(vic_mf$age, na.rm = TRUE)
-sd(vic_mf$age)
+sd(vic_mf$age, na.rm = TRUE)
 
 # Table
 
@@ -147,14 +174,13 @@ t_age <- vic_mf %>%
 
 kable(t_age)
 ```
-
 ## W2 Age
 
 ```{r}
+summary(w1$age, na.rm=TRUE)
 summary(w2$age, na.rm = TRUE)
 sd(w2$age, na.rm = TRUE)
 ```
-
 
 ## Age Categories (using stats can age groups)
 ```{r}
@@ -225,7 +251,7 @@ tabyl(vic_mf$gender)
 t_gen <- vic_mf %>%
           group_by(wave_id, vic_mf$gender) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_gen)
 
@@ -417,6 +443,7 @@ t_can  <- vic_mf %>%
             mutate(pct = n / sum(n))
 
 kable(t_can)
+
 ```
 
 ## Ethinic/Cultural Groups
@@ -442,7 +469,7 @@ tabyl(vic_mf$ethnicity)
 t_eth <- vic_mf %>%
           group_by(wave_id, vic_mf$ethnicity) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_eth)
 ```
@@ -504,7 +531,7 @@ summary(vic_mf$income_1)
 t_inc <- vic_mf %>%
           group_by(wave_id, vic_mf$income_1) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_inc)
 
@@ -539,7 +566,7 @@ summary(vic_mf$income)
 t_income <- vic_mf %>%
           group_by(wave_id, vic_mf$income_2) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 
 kable(t_income)
 ```
@@ -848,7 +875,7 @@ tabyl(victoria_new_ID_gps$vicroads_f)
 
 ## Self-report Physical Activity Data - Total PA - Outcome Variable 
 
-## Physical Activity - Cycling 
+## Physical Activity - Cycling
 ```{r}
 tabyl(victoria_new_ID_gps$travel_bike)
 victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "Cycling_formula" = 6 * travel_bike_freq * travel_bike)
@@ -984,14 +1011,23 @@ victoria_new_ID_GPS <- read_csv("victoria_new_ID_gps.csv")
 
 ## Car Access
 ```{r}
-tabyl(victoria_new_ID_gps$car_access)
+tabyl(vic_mf$car_access)
 
-victoria_new_ID_gps <- victoria_new_ID_gps %>% mutate(car_access_1 = case_when(
+vic_mf <- vic_mf %>% mutate(car_access_1 = case_when(
   car_access == 1 ~ "Yes",
   car_access == 2 ~ "No"
 ))
-tabyl(victoria_new_ID_gps$car_access_1)
-tabyl(victoria_new_ID_gps$cars_household)
+tabyl(vic_mf$car_access_1)
+tabyl(vic_mf$cars_household)
+
+# Table
+
+t_car <- vic_mf %>%
+          group_by(wave_id, vic_mf$car_access) %>%
+            summarise(n = n()) %>%
+            mutate(pct = 100*n / sum(n))
+
+kable(t_car)
 ```
 
 ## Percieved Cycling Safety in Victoria
