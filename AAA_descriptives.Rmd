@@ -125,6 +125,11 @@ tabyl(SD_vic_two$interact_id)
 #tabyl(merged_ID$gps_checker)
 #tabyl(merged_ID$gps_checker)
 
+#vic_mf$income = as.numeric(as.factor(vic_mf$income))
+income = as.numeric(as.factor(SD_vic_all$income))
+vic_mf <- vic_mf %>% 
+  rename(income = income_2)
+
 vc <- left_join(vic_mf, SD_vic_all, .id = "interact_id") #merging health/eligibility with SD
 
 tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly. 
@@ -368,6 +373,8 @@ health_plot <- ggplot(data = vic_mf, aes(health_status)) +
        y = "Number of Participants (n)") + 
   facet_wrap(~ wave_id)
 plot(health_plot)
+
+46+25.2
 ```
 
 ## Marital Status
