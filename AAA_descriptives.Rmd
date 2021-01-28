@@ -125,14 +125,10 @@ tabyl(SD_vic_two$interact_id)
 #tabyl(merged_ID$gps_checker)
 #tabyl(merged_ID$gps_checker)
 
-#vic_mf$income = as.numeric(as.factor(vic_mf$income))
-income = as.numeric(as.factor(SD_vic_all$income))
-vic_mf <- vic_mf %>% 
-  rename(income = income_2)
+# by wave and interact id
+vic_complete <- left_join(vic_mf, SD_vic_all, by = c("interact_id", "wave_id")) #merging health/eligibility with SD
 
-vc <- left_join(vic_mf, SD_vic_all, .id = "interact_id") #merging health/eligibility with SD
-
-tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly. 
+tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly.
 #write_csv(vic_mf, "victoria_new_ID_gps.csv") #writing CSV
 ```
 
@@ -140,7 +136,7 @@ tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transfe
 
 ```{r}
 ## Age
-SD_vic_two <- subset(SD_vic_two, age > 20)##Subset to remove -1s
+SD_vic_two <- subset(SD_vic_two, age > 20)##Subset to remove Ages that were not sampled
 summary(SD_vic_two$age, na.rm = TRUE)
 sd(SD_vic_two$age, na.rm = TRUE)
 
@@ -373,8 +369,6 @@ health_plot <- ggplot(data = vic_mf, aes(health_status)) +
        y = "Number of Participants (n)") + 
   facet_wrap(~ wave_id)
 plot(health_plot)
-
-46+25.2
 ```
 
 ## Marital Status
@@ -422,10 +416,18 @@ vic_mf <- vic_mf %>% mutate(children_1 = case_when(
 tabyl(vic_mf$children_1)
 tabyl(vic_mf$living_children)
 
+## SD
+
+vic_complete <- vic_mf %>% mutate(children_1 = case_when(
+  children == 1 ~ "Yes",
+  children == 2 ~ "No"
+))
+tabyl(vic_mf$children_1)
+tabyl(vic_mf$living_children)
 # Table
 
-t_kids <- vic_mf %>%
-          group_by(wave_id, vic_mf$children_1) %>%
+t_kids <- vic_complete %>%
+          group_by(wave_id, vic_complete$children_1) %>%
             summarise(n = n()) %>%
             mutate(pct = n / sum(n))
 
@@ -546,7 +548,7 @@ kable(t_inc)
 
 ## Recoding income into 4 categories
 ```{r}
-tabyl(vic_mf$income)
+tabyl(vic_mf$income.x)
 
 vic_mf <- vic_mf %>% mutate(income_2 = case_when(
   income == 1 ~ "$49,000 or less",
@@ -561,7 +563,7 @@ vic_mf <- vic_mf %>% mutate(income_2 = case_when(
   income == 10 ~ "$150,000 or more",
   income == 11 ~ "$150,000 or more",
   income == 77 ~ "I don't know/Prefer not to answer"
-)) 
+))
 
 vic_mf$income_1 <- factor(vic_mf$income_1, c("No income", "$1 to $9,999", "$10,000 to $14,999", "$15,000 to $19,999", "$20,000 to $29,999", "$30,000 to $39,999", "$40,000 to $49,999","$50,000 to $99,999","$100,000 to $149,999","$150,000 to $199,999", "$200,000 or more", "I don't know/Prefer not to answer"))
 
@@ -768,7 +770,7 @@ tabyl(vic_mf$aaa_familiarity_1)
 t_aaa_fam <- vic_mf %>%
           group_by(wave_id, vic_mf$aaa_familiarity_1) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 kable(t_aaa_fam)
 ```
 
@@ -805,7 +807,7 @@ tabyl(vic_mf$aaa_idea_1)
 t_aaa_idea <- vic_mf %>%
           group_by(wave_id, vic_mf$aaa_idea_1) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 kable(t_aaa_idea)
 ```
 
@@ -836,7 +838,7 @@ tabyl(vic_mf$aaa_bike_more_1)
 t_abm <- vic_mf %>%
           group_by(wave_id, vic_mf$aaa_bike_more_1) %>%
             summarise(n = n()) %>%
-            mutate(pct = n / sum(n))
+            mutate(pct = 100*n / sum(n))
 kable(t_abm)
 ```
 
@@ -948,7 +950,7 @@ victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "mod_leisure_formula" = 4* mo
 tabyl(victoria_new_ID_gps$mod_leisure_formula)
 ```
 
-Vigorous Leisure
+## Vigorous Leisure
 ```{r}
 victoria_new_ID_gps <- mutate(victoria_new_ID_gps, "vig_leisure_formula" = 8* leisure_vigpa_freq + leisure_vigpa)
 tabyl(victoria_new_ID_gps$vig_leisure_formula)
