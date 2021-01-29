@@ -39,7 +39,7 @@ library(sf)
 ## Subset for w2 only
 
 ## Before I do this, add a column in SD_vic_all to identify sensedoc (1) 
-sd2 <- subset(vic_complete, wave_id == 2)
+sd2 <- subset(vic_complete, sensedoc == 2)
 
 ```
 

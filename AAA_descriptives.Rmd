@@ -96,9 +96,8 @@ w2 <- full_join(w2e, w2h, by = "interact_id")
 # Combine W1 and W2 data
 vic_mf <- bind_rows(w1, w2)
 vic_mf <- vic_mf %>% 
-  rename(wave_id = wave_id.x)
-
-table(vic_mf$wave_id)
+  rename(wave_id = wave_id.x
+  )
 
 ### We have 281 in wave 1 and 315 in wave 2. That's correct. 
 
@@ -112,10 +111,12 @@ table(vic_mf$participation.y)
 ## Reading in SD data
 ```{r}
 SD_vic_one <- read_csv("~/INTERACT/SenseDoc/victoria_01_top_1min.csv") # read in SD w1 participants n = 129
+SD_vic_one <- SD_vic_one %>% mutate(sensedoc = "1") # Add variable to SD w1 (1)
 SD_vic_two <- read_csv("~/INTERACT/SenseDoc/victoria_02_top_1min.csv") # read in SD w2 participants n = 153
+SD_vic_two <- SD_vic_two %>% mutate(sensedoc = "2") # Add variable to victoria health w1 (1)
 SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
 
-tabyl(SD_vic_two$interact_id)
+tabyl(SD_vic_all$interact_id)
 ```
 
 ## Joining Data
@@ -126,17 +127,15 @@ tabyl(SD_vic_two$interact_id)
 #tabyl(merged_ID$gps_checker)
 
 # by wave and interact id
-vic_complete <- left_join(vic_mf, SD_vic_all, by = c("interact_id", "wave_id")) #merging health/eligibility with SD
-
-tabyl(vic_mf$gps_checker) #checking to make sure that all of the GPS IDs transferred over correctly.
-#write_csv(vic_mf, "victoria_new_ID_gps.csv") #writing CSV
+vic_mf <- vic_mf %>% mutate(sensedoc = "0") # Add variable to vic all for SD
+vic_complete <- left_join(vic_mf, SD_vic_all, by = c("interact_id", "wave_id", "sensedoc", "city_id"))  #merging health/eligibility with SD
 ```
 
 ## SD subsample w2
 
 ```{r}
 ## Age
-SD_vic_two <- subset(SD_vic_two, age > 20)##Subset to remove Ages that were not sampled
+SD_vic_two <- subset(SD_vic_two, age > 20) ##Subset to remove Ages that were not sampled
 summary(SD_vic_two$age, na.rm = TRUE)
 sd(SD_vic_two$age, na.rm = TRUE)
 
