@@ -33,13 +33,14 @@ library(sf)
 ```
 
 ## Subset to get only W2 from vic_complete
+
 ```{r}
 ## Load in W1 + w2 merged data
 #victoria_small_merged_1 <- read_csv("victoria_small_merged_1.csv")
 ## Subset for w2 only
 
 ## Before I do this, add a column in SD_vic_all to identify sensedoc (1) 
-sd2 <- subset(vic_complete, sensedoc == 2)
+sd2 <- subset(vic_complete, sensedoc.y == 2)
 
 ```
 
@@ -241,19 +242,19 @@ plot(AAA_idea_plot)
 
 ## AAA Cycle More
 ```{r}
-tabyl(vic_mf$aaa_bike_more)
+tabyl(sd2$aaa_bike_more)
 
-vic_mf <- vic_mf %>% mutate(aaa_bike_more_1 = case_when(
+sd2 <- sd2 %>% mutate(aaa_bike_more_1 = case_when(
   aaa_bike_more == 1 ~ "Yes",
   aaa_bike_more == 2 ~ "No"
 ))
 
-tabyl(vic_mf$aaa_bike_more_1)
+tabyl(sd2$aaa_bike_more_1)
 
 # Table
 
-t_abm <- vic_mf %>%
-          group_by(wave_id, vic_mf$aaa_bike_more_1) %>%
+t_abm <- sd2 %>%
+          group_by(wave_id, sd2$aaa_bike_more_1) %>%
             summarise(n = n()) %>%
             mutate(pct = 100*n / sum(n))
 kable(t_abm)

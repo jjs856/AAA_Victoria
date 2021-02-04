@@ -40,14 +40,14 @@ library(kableExtra)
 ### /Users/dfuller/Documents/INTERACT 
 ### ~/INTERACT/data/
 
-vh_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
-ve_1 <- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
+vh_1 <- read_csv("~/INTERACT/data/health_1vic_main_1884baf.csv") #vic health survey
+ve_1 <- read_csv("~/INTERACT/data/eligibility_1vic_main_1884baf.csv") #vic eligibility survey
 
 # W2
-vh_2 <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
-vh_2_new <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
-ve_2 <- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
-ve_2_new<- read_csv("/Users/dfuller/Documents/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
+vh_2 <- read_csv("~/INTERACT/data/health_2vic_main_1884baf.csv") # w2 health n = 164
+vh_2_new <- read_csv("~/INTERACT/data/health_2vicnew_main_1884baf.csv") # w2 health new
+ve_2 <- read_csv("~/INTERACT/data/eligibility_2vic_main_1884baf.csv") # w2 eligibility
+ve_2_new<- read_csv("~/INTERACT/data/eligibility_2vicnew_main_1884baf.csv") # w2 new eli new n = 143
 ```
 
 ## Create new variable new and returning participation level
@@ -128,7 +128,7 @@ tabyl(SD_vic_all$interact_id)
 
 # by wave and interact id
 vic_mf <- vic_mf %>% mutate(sensedoc = "0") # Add variable to vic all for SD
-vic_complete <- left_join(vic_mf, SD_vic_all, by = c("interact_id", "wave_id", "sensedoc", "city_id"))  #merging health/eligibility with SD
+vic_complete <- left_join(vic_mf, SD_vic_all, by = c("interact_id", "wave_id"))  #merging health/eligibility with SD
 ```
 
 ## SD subsample w2
