@@ -1,0 +1,336 @@
+---
+title: "Buffer"
+author: "Jonathan Slaney"
+date: "23/02/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Code for master's thesis buffer calculation
+
+## Required packages
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(naniar)
+library(ggmap)
+library(ggthemes)
+library(sf)
+library(rgeos)
+library(cancensus)
+library(cowplot)
+library(ggspatial)
+library(knitr)
+```
+
+## Game plan
+
+1. Filter SD participants
+2. Simplify date
+3. Summarize (makes results table of MVPA)
+4. Figures
+5. Visualize GPS points + bike infrastructure 2017/ 2019
+6. Apply 70m buffer
+
+# Filter SD Participants
+```{r}
+## Reading in SD data
+```{r}
+SD_vic_one <- read_csv("~/INTERACT/SenseDoc/victoria_01_top_1min.csv") # read in SD w1 participants n = 129
+SD_vic_one <- SD_vic_one %>% mutate(sensedoc = "1") # Add variable to SD w1 (1)
+SD_vic_two <- read_csv("~/INTERACT/SenseDoc/victoria_02_top_1min.csv") # read in SD w2 participants n = 153
+SD_vic_two <- SD_vic_two %>% mutate(sensedoc = "2") # Add variable to victoria health w1 (1)
+SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
+
+tabyl(SD_vic_all$interact_id)
+```
+
+ 
+### Reading in the physical activity data from SenseDoc
+```{r warning=FALSE}
+data_temp <- NULL
+data_temp <- dir(path = "/Users/dfuller/Documents/INTERACT/data/sensors/", full.names = TRUE, pattern = "*_sd.csv", recursive = TRUE) %>%
+   purrr::map(function(i){
+     dfhx <- read.csv(i, header = TRUE)
+     temp <- bind_rows(data_temp, dfhx)
+   })
+sd_data <- bind_rows(data_temp)
+rm(data_temp)
+table(sd_data$city)
+```
+
+### Reading in the physical activity data from Ethica
+```{r warning=FALSE}
+data_temp <- NULL
+data_temp <- dir(path = "/Users/dfuller/Documents/INTERACT/data/sensors/", full.names = TRUE, pattern = "*_ethica.csv", recursive = TRUE) %>%
+   purrr::map(function(i){
+     dfhx <- read.csv(i, header = TRUE)
+     temp <- bind_rows(data_temp, dfhx)
+   })
+ethica_data <- bind_rows(data_temp)
+rm(data_temp)
+table(ethica_data$city)
+```
+
+## Some basic cleaning
+
+```{r warning=FALSE}
+# Filter out if they are not in the city, Reason: No CTUID for out of the city
+sd_data <- sd_data %>% filter(in_city == 1 & wearing == 1)
+sd_data <- sd_data %>%
+	mutate(activity_levels = case_when(
+		x_count < 100 ~ "sedentary",
+		x_count >= 100 & x_count <= 1951 ~ "light",
+		x_count >= 1951 & x_count <= 5724 ~ "moderate",
+	  x_count >= 5725 ~ "vigorous"
+	))
+ethica_data <- ethica_data %>%
+	mutate(activity_levels = case_when(
+		x_count < 100 ~ "sedentary",
+		x_count >= 100 & x_count <= 1951 ~ "light",
+		x_count >= 1951 & x_count <= 5724 ~ "moderate",
+	  x_count >= 5725 ~ "vigorous"
+	))
+```
+
+## Create a date column and add a minutes in census tract by id, date, and census tract column 
+
+```{r}
+#### SenseDoc
+table(sd_data$city_id)
+sd_data$date <- sd_data$utcdate %>% as.Date()
+sd_data$minutes <- 1
+sd_data <- sd_data %>% 
+  group_by(interact_id, date, city_id) %>% 
+  mutate(
+      minutes_id_date_city = sum(minutes)
+  )
+### Ethica
+table(ethica_data$city_id)
+ethica_data$date <- ethica_data$utcdate %>% as.Date()
+ethica_data$minutes <- 1
+ethica_data <- ethica_data %>% 
+  group_by(interact_id, date, city_id) %>% 
+  mutate(
+      minutes_id_date_city = sum(minutes)
+  )
+```
+
+### MPVA Minutes SenseDoc
+
+```{r}
+table(sd_data$activity_levels)
+table(sd_data$wearing)
+### MVPA Minutes
+sd_data <- sd_data %>%
+	mutate(mvpa = case_when(
+		activity_levels == "light" ~ 0,
+		activity_levels == "sedentary" ~ 0,
+		activity_levels == "moderate" ~ 1,
+		activity_levels == "vigorous" ~ 1
+	))
+### Sed Minutes
+sd_data <- sd_data %>%
+	mutate(sed = case_when(
+		activity_levels == "light" ~ 0,
+		activity_levels == "sedentary" ~ 1,
+		activity_levels == "moderate" ~ 0,
+		activity_levels == "vigorous" ~ 0
+	))
+### Sed Minutes
+sd_data <- sd_data %>%
+	mutate(light_pa = case_when(
+		activity_levels == "light" ~ 1,
+		activity_levels == "sedentary" ~ 0,
+		activity_levels == "moderate" ~ 0,
+		activity_levels == "vigorous" ~ 0
+	))
+sd_data <- sd_data %>% 
+    group_by(interact_id, date, city_id) %>% 
+      mutate(
+        total_mvpa_minutes = sum(mvpa),
+        total_sed_minutes = sum(sed),
+        total_light_pa_minutes = sum(light_pa)
+        )
+sd_pa_table <- sd_data %>%
+                group_by(interact_id, date, city_id) %>%
+                  summarize(
+                    time = mean(minutes_id_date_city, na.rm = TRUE),
+                    wearing = mean(wearing, na.rm = TRUE),
+                    mean_mpva_sd = mean(total_mvpa_minutes, na.rm = TRUE), 
+                    sd_mpva_sd = sd(total_mvpa_minutes, na.rm = TRUE), 
+                    mean_sed_sd = mean(total_sed_minutes, na.rm = TRUE), 
+                    sd_sed_sd = sd(total_sed_minutes, na.rm = TRUE), 
+                    mean_light_sd = mean(total_light_pa_minutes, na.rm = TRUE), 
+                    sd_light_sd = sd(total_light_pa_minutes, na.rm = TRUE), 
+                    na_count = sum(is.na(total_mvpa_minutes)), 
+                    count = n()
+                  )
+sd_pa_table
+sd_sum_table <- sd_pa_table %>%
+                group_by(city_id) %>%
+                  summarize(
+                    time = mean(time, na.rm = TRUE), 
+                    wearing = mean(wearing, na.rm = TRUE), 
+                    mean_mpva_sd = mean(mean_mpva_sd, na.rm = TRUE), 
+                    mean_sed_sd = mean(mean_sed_sd, na.rm = TRUE), 
+                    mean_light_sd = mean(mean_light_sd, na.rm = TRUE), 
+                    na_count = sum(is.na(time)), 
+                    count = n()
+                  )
+sd_sum_table
+```
+
+### SD Activity Figures by city
+
+```{r}
+##  formula = y ~ s(x, bs = "cs") with method = "REML".
+saskatoon_activity <-  sd_pa_table %>% 
+              filter(city_id == "saskatoon") %>% 
+              ggplot() + 
+                    geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
+                    geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
+                    geom_smooth(aes(x = date, y = mean_sed_sd),  colour = "black") +    
+                  scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
+                  ylim(0, 400) +
+                  labs(x = "Date", y = "Minutes") +
+                  theme_classic()
+plot(saskatoon_activity)
+ggsave("saskatoon_activity.jpg", dpi = 150, height = 4, width = 6)
+```
+
+```{r}
+montreal_activity <-  sd_pa_table %>% 
+              filter(city_id == "montreal") %>% 
+              ggplot() + 
+                    geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
+                    geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
+                    geom_smooth(aes(x = date, y = mean_sed_sd), colour = "black") +    
+                  scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
+                  ylim(0, 400) +
+                  labs(x = "Date", y = "Minutes") +
+                  theme_classic()
+plot(montreal_activity)
+ggsave("montreal_activity.jpg", dpi = 150, height = 4, width = 6)
+```
+
+```{r}
+vancouver_activity <-  sd_pa_table %>% 
+              filter(city_id == "vancouver") %>% 
+              ggplot() + 
+                    geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
+                    geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
+                    geom_smooth(aes(x = date, y = mean_sed_sd), colour = "black") +           
+                  scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
+                  ylim(0, 400) +
+                  labs(x = "Date", y = "Minutes") +  
+                  theme_classic()
+plot(vancouver_activity)
+ggsave("vancouver_activity.jpg", dpi = 150, height = 4, width = 6)
+```
+
+```{r}
+victoria_activity <-  sd_pa_table %>% 
+          filter(city_id == "victoria") %>% 
+          ggplot() + 
+                    geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
+                    geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
+                    geom_smooth(aes(x = date, y = mean_sed_sd), colour = "black") +     
+                scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
+                ylim(0, 400) +
+                labs(x = "Date", y = "Minutes") +
+                theme_classic()
+plot(victoria_activity)
+ggsave("victoria_activity.jpg", dpi = 150, height = 4, width = 6)
+```
+
+# Interventions SenseDoc Data
+
+### Victoria
+
+```{r}
+vic_cma <- get_census(dataset='CA16', regions=list(CMA="59935"),
+                          level='CMA', use_cache = TRUE, geo_format = "sf")
+vic_sd <- sd_data %>% filter(city_id == "victoria" & in_city == 1) 
+sd_vic_days <- as.data.frame(unique(vic_sd$date))
+vic_int <- st_read("/Users/dfuller/Documents/INTERACT/data/intervention/victoria/IBIMS_2017.shp")
+st_crs(vic_int)
+vic_int_t <- st_transform(vic_int, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
+st_crs(vic_int_t)
+vic_int_t
+vic_int_t$AAA <- vic_int_t$AAA %>% replace_na(0)
+vic_int_plot <- ggplot() + 
+                  geom_sf(data = vic_cma) +
+                  geom_hex(aes(x = lon, y = lat), binwidth = c(0.005, 0.005), data = vic_sd, alpha = 0.8) +
+                  scale_fill_gradient2(name="Count of GPS points", low="lightblue", high = "darkblue") +
+                  geom_sf(data = vic_int_t, aes(colour = AAA)) +
+                  coord_sf(
+                      xlim = sf::st_bbox(vic_int_t)[c(1,3)],
+                      ylim = sf::st_bbox(vic_int_t)[c(2,4)]) + 
+                  scale_color_manual(name="Cycling Infrastructure", labels=c("Existing", "AAA"), values=c("grey80", "black")) +
+                  annotation_scale() + 
+                  theme_map()
+plot(vic_int_plot)
+ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
+```
+
+# GPS Maps
+
+### Victoria
+
+```{r}
+### Full View
+vic_basemap <- get_map(c(-123.5, 48.5),
+                     source = "google",
+                     maptype = "roadmap", crop = FALSE,
+                     zoom = 10)
+plot(vic_basemap)
+vic_points <- ggmap(vic_basemap) + 
+                  geom_bin2d(aes(x = lon, y = lat), binwidth = c(0.015, 0.015), data = vic_sd, alpha = 1) +
+                  scale_fill_gradient2(low="darkred", high = "darkblue") +
+                  theme_map()
+plot(vic_points)
+ggsave("vic_points.jpg", dpi = 150, height = 4, width = 6)
+### Zoom 
+vic_basemap_zoom <- get_map(location = "Victoria, BC, Canada",
+                     source = "google",
+                     maptype = "roadmap", crop = FALSE,
+                     zoom = 13)
+plot(vic_basemap_zoom)
+vic_points_zoom <- ggmap(vic_basemap_zoom) + 
+                  geom_bin2d(aes(x = lon, y = lat), binwidth = c(0.0025, 0.0025), data = vic_sd, alpha = 0.8) +
+                  scale_fill_gradient2(high = "darkblue") +
+                  theme_map()
+plot(vic_points_zoom)
+ggsave("vic_points_zoom.jpg", dpi = 150, height = 4, width = 6)
+``` 
+
+# Participant Data Flow
+
+## Victoria
+
+```{r}
+## Veritas data VIC
+veritas_vic <- read_csv("/Users/dfuller/Documents/INTERACT/data/veritas/veritas_1vic_main_1884baf.csv")
+veritas_vic$veritas <- 1
+### Health data 
+data_small$health <- 1 
+data_vic <- data_small %>%
+              filter(city_id == "Victoria") %>%
+              select(interact_id, city_id, health) 
+length(data_vic$health) ### Number of Health Participants
+flow_vic <- left_join(data_vic, veritas_vic)
+table(flow_vic$veritas) ### Number of VERITAS Participants
+### SenseDoc
+vic_sd_small <- vic_sd %>%
+                  group_by(interact_id) %>%
+                  summarize(
+                    interact_id = first(interact_id),
+                    sensedoc = 1, 
+                  )
+flow_vic <- left_join(flow_vic, vic_sd_small)
+table(flow_vic$sensedoc)  ### Number of SenseDoc Participants
