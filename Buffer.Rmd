@@ -103,7 +103,7 @@ table(sd_data$wave_id)
 sd_data$date <- sd_data$utcdate %>% as.Date()
 sd_data$minutes <- 1
 sd_data <- sd_data %>% 
-  group_by(interact_id, date) %>% 
+  group_by(interact_id, date, wave_id) %>% 
   mutate(
       minutes_id_date = sum(minutes)
   )
@@ -147,10 +147,10 @@ sd_data <- sd_data %>%
         total_light_pa_minutes = sum(light_pa)
         )
 sd_pa_table <- sd_data %>%
-                group_by(interact_id, date) %>%
-                  summarize(
+                group_by(interact_id, date, wave_id) %>%
+                  summarise(
                     time = mean(minutes_id_date, na.rm = TRUE),
-                    wearing = mean(wearing),
+                    wearing = mean(wearing, na.rm = TRUE),
                     mean_mpva_sd = mean(total_mvpa_minutes, na.rm = TRUE), 
                     sd_mpva_sd = sd(total_mvpa_minutes, na.rm = TRUE), 
                     mean_sed_sd = mean(total_sed_minutes, na.rm = TRUE), 
@@ -163,7 +163,7 @@ sd_pa_table <- sd_data %>%
 sd_pa_table
 sd_sum_table <- sd_pa_table %>%
                 group_by(wave_id) %>%
-                  summarize(
+                  summarise(
                     time = mean(time, na.rm = TRUE), 
                     wearing = mean(wearing, na.rm = TRUE), 
                     mean_mpva_sd = mean(mean_mpva_sd, na.rm = TRUE), 
@@ -175,12 +175,12 @@ sd_sum_table <- sd_pa_table %>%
 sd_sum_table
 ```
 
-### SD Activity Figures by city
+### SD Activity Figures by wave
 
 ```{r}
 ##  formula = y ~ s(x, bs = "cs") with method = "REML".
-saskatoon_activity <-  sd_pa_table %>% 
-              filter(city_id == "saskatoon") %>% 
+wave1_activity <-  sd_pa_table %>% 
+              filter(wave_id == "1") %>% 
               ggplot() + 
                     geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
                     geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
@@ -189,43 +189,28 @@ saskatoon_activity <-  sd_pa_table %>%
                   ylim(0, 400) +
                   labs(x = "Date", y = "Minutes") +
                   theme_classic()
-plot(saskatoon_activity)
-ggsave("saskatoon_activity.jpg", dpi = 150, height = 4, width = 6)
+plot(wave1_activity)
+ggsave("wave1_activity.jpg", dpi = 150, height = 4, width = 6)
 ```
 
 ```{r}
-montreal_activity <-  sd_pa_table %>% 
-              filter(city_id == "montreal") %>% 
+##  formula = y ~ s(x, bs = "cs") with method = "REML".
+wave2_activity <-  sd_pa_table %>% 
+              filter(wave_id == "2") %>% 
               ggplot() + 
                     geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
                     geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
-                    geom_smooth(aes(x = date, y = mean_sed_sd), colour = "black") +    
+                    geom_smooth(aes(x = date, y = mean_sed_sd),  colour = "black") +    
                   scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
                   ylim(0, 400) +
                   labs(x = "Date", y = "Minutes") +
                   theme_classic()
-plot(montreal_activity)
-ggsave("montreal_activity.jpg", dpi = 150, height = 4, width = 6)
-```
-
-```{r}
-vancouver_activity <-  sd_pa_table %>% 
-              filter(city_id == "vancouver") %>% 
-              ggplot() + 
-                    geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
-                    geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
-                    geom_smooth(aes(x = date, y = mean_sed_sd), colour = "black") +           
-                  scale_x_date(date_breaks = "1 month", date_labels = "%m-%Y") +
-                  ylim(0, 400) +
-                  labs(x = "Date", y = "Minutes") +  
-                  theme_classic()
-plot(vancouver_activity)
-ggsave("vancouver_activity.jpg", dpi = 150, height = 4, width = 6)
+plot(wave2_activity)
+ggsave("wave2_activity.jpg", dpi = 150, height = 4, width = 6)
 ```
 
 ```{r}
 victoria_activity <-  sd_pa_table %>% 
-          filter(city_id == "victoria") %>% 
           ggplot() + 
                     geom_smooth(aes(x = date, y = mean_light_sd), colour = "black", linetype = "dashed") +
                     geom_smooth(aes(x = date, y = mean_mpva_sd), colour = "grey") + 
@@ -247,7 +232,7 @@ vic_cma <- get_census(dataset='CA16', regions=list(CMA="59935"),
                           level='CMA', use_cache = TRUE, geo_format = "sf")
 vic_sd <- sd_data %>% filter(city_id == "victoria" & in_city == 1) 
 sd_vic_days <- as.data.frame(unique(vic_sd$date))
-vic_int <- st_read("/Users/dfuller/Documents/INTERACT/data/intervention/victoria/IBIMS_2017.shp")
+vic_int <- st_read("/Users/jslan/Documents/INTERACT/data/intervention/victoria/IBIMS_2017.shp")
 st_crs(vic_int)
 vic_int_t <- st_transform(vic_int, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
 st_crs(vic_int_t)
