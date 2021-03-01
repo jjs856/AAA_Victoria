@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Code for master's thesis buffer calculation
+# Code for master's thesis buffer calculation 
 
 ## Required packages
 ```{r}
@@ -228,9 +228,10 @@ ggsave("victoria_activity.jpg", dpi = 150, height = 4, width = 6)
 ### Victoria
 
 ```{r}
+
 vic_cma <- get_census(dataset='CA16', regions=list(CMA="59935"),
                           level='CMA', use_cache = TRUE, geo_format = "sf")
-vic_sd <- sd_data %>% filter(city_id == "victoria" & in_city == 1) 
+vic_sd <- sd_data %>% filter(in_city == 1) 
 sd_vic_days <- as.data.frame(unique(vic_sd$date))
 vic_int <- st_read("/Users/jslan/Documents/INTERACT/data/intervention/victoria/IBIMS_2017.shp")
 st_crs(vic_int)
