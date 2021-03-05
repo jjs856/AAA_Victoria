@@ -41,7 +41,6 @@ library(QuantPsyc)
 library(KernSmooth)
 library(raster)
 library(sp)
-library(sf)
 library(kableExtra)
 ```
 
@@ -52,7 +51,7 @@ library(kableExtra)
 3. Summarize (makes results table of MVPA)
 4. Figures
 5. Visualize GPS points + bike infrastructure 2017/ 2019
-6. Apply 70m buffer -> How? 
+6. Apply 70m buffer -> st_buffer()
 
 # Filter SD Participants
 ```{r}
@@ -67,7 +66,8 @@ tabyl(SD_vic_all$interact_id)
 ```
  
 ### Reading in the physical activity data from SenseDoc
-```{r warning=FALSE}
+
+```{ arning=FALSE}
 data_temp <- NULL
 data_temp <- dir(path = "/Users/jslan/Documents/INTERACT/data", full.names = TRUE, pattern = "*_sd.csv", recursive = TRUE) %>%
    purrr::map(function(i){
@@ -95,7 +95,7 @@ SD_vic_all <- SD_vic_all %>%
 sd_data <- SD_vic_all
 ```
 
-## Create a date column and add a minutes in census tract by id, date, and census tract column 
+## Create a date column and add a minutes in census tract by id, date, and census tract column
 
 ```{r}
 #### SenseDoc
@@ -221,6 +221,53 @@ victoria_activity <-  sd_pa_table %>%
                 theme_classic()
 plot(victoria_activity)
 ggsave("victoria_activity.jpg", dpi = 150, height = 4, width = 6)
+```
+
+# Vctoria GPS points without basemap
+
+```{r}
+vic_gps_points <- ggplot() + 
+  geom_sf(data = sd_data) + 
+  geom_hex(aes(x = lon, y = lat), data = sd_data)
+plot(vic_gps_points)
+```
+# Apply 70m buffer to Pandora bike lane
+
+```{r}
+d <-"C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp"
+sd <- shapefile(d) ## Doesn't work. Try another
+
+getwd()
+vi <- st_read("~/INTERACT/data/victoria/IBIMS_2017.shp") ## Doesn't work. FML
+
+read_sf("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp", quiet = TRUE, stringsAsFactors = FALSE, as_tibble = TRUE)
+
+
+```
+
+# PLot Vic GPS point
+```{r}
+
+vic_int <- st_read("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp")
+st_crs(vic_int)
+vic_int_t <- st_transform(vic_int, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
+st_crs(vic_int_t)
+vic_int_t
+vic_int_t$AAA <- vic_int_t$AAA %>% replace_na(0)
+vic_int_plot <- ggplot() + 
+                  geom_hex(aes(x = lon, y = lat), binwidth = c(0.005, 0.005), data = vic_sd, alpha = 0.8) +
+                  scale_fill_gradient2(name="Count of GPS points", low="lightblue", high = "darkblue") +
+                  geom_sf(data = vic_int_t, aes(colour = AAA)) +
+                  coord_sf(
+                      xlim = sf::st_bbox(vic_int_t)[c(1,3)],
+                      ylim = sf::st_bbox(vic_int_t)[c(2,4)]) + 
+                  scale_color_manual(name="Cycling Infrastructure", labels=c("Existing", "AAA"), values=c("grey80", "black")) +
+                  annotation_scale() + 
+                  theme_map()
+plot(vic_int_plot)
+ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
+
+victoria_buffer = st_buffer(vic_int, dist = 70)
 ```
 
 # Interventions SenseDoc Data
