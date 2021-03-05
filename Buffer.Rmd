@@ -240,9 +240,11 @@ sd <- shapefile(d) ## Doesn't work. Try another
 getwd()
 vi <- st_read("~/INTERACT/data/victoria/IBIMS_2017.shp") ## Doesn't work. FML
 
-read_sf("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp", quiet = TRUE, stringsAsFactors = FALSE, as_tibble = TRUE)
+vi <- read_sf("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp", quiet = TRUE, stringsAsFactors = FALSE, as_tibble = TRUE)
 
+library(rgdal)
 
+vi <- readOGR(dsn= paste0(getwd(),"~/INTERACT/data/victoria/IBIMS_2017.shp"))
 ```
 
 # PLot Vic GPS point
