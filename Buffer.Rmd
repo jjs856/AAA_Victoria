@@ -231,33 +231,26 @@ vic_gps_points <- ggplot() +
   geom_hex(aes(x = lon, y = lat), data = sd_data)
 plot(vic_gps_points)
 ```
+
 # Apply 70m buffer to Pandora bike lane
 
+# Read in 2017 Shape file
 ```{r}
-d <-"C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp"
-sd <- shapefile(d) ## Doesn't work. Try another
-
 getwd()
-vi <- st_read("~/INTERACT/data/victoria/IBIMS_2017.shp") ## Doesn't work. FML
 
-vi <- read_sf("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp", quiet = TRUE, stringsAsFactors = FALSE, as_tibble = TRUE)
+vic_int <- st_read("C:/Users/jslan/OneDrive/Documents/INTERACT/R Studio Projects/AAA_Victoria/IBIMS_2017.shp")
 
-library(rgdal)
-
-vi <- readOGR(dsn= paste0(getwd(),"~/INTERACT/data/victoria/IBIMS_2017.shp"))
 ```
 
-# PLot Vic GPS point
+# PLot Vic 2017 shp 
 ```{r}
-
-vic_int <- st_read("C:/Users/jslan/OneDrive/Documents/INTERACT/data/victoria/IBIMS_2017.shp")
+vic_int <- st_read("C:/Users/jslan/OneDrive/Documents/INTERACT/R Studio Projects/AAA_Victoria/IBIMS_2017.shp")
 st_crs(vic_int)
 vic_int_t <- st_transform(vic_int, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
 st_crs(vic_int_t)
 vic_int_t
 vic_int_t$AAA <- vic_int_t$AAA %>% replace_na(0)
 vic_int_plot <- ggplot() + 
-                  geom_hex(aes(x = lon, y = lat), binwidth = c(0.005, 0.005), data = vic_sd, alpha = 0.8) +
                   scale_fill_gradient2(name="Count of GPS points", low="lightblue", high = "darkblue") +
                   geom_sf(data = vic_int_t, aes(colour = AAA)) +
                   coord_sf(
@@ -268,13 +261,52 @@ vic_int_plot <- ggplot() +
                   theme_map()
 plot(vic_int_plot)
 ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
+```
+# Apply st_buffer() to vic 2017 shp
+```{r}
+victoria_buffer = st_buffer(vic_int_plot, dist = 0.7)
+plot(victoria_buffer)
 
-victoria_buffer = st_buffer(vic_int, dist = 70)
+
+```
+
+# Read in 2019 Shape file
+
+```{r}
+vic_int_2019 <- st_read("C:/Users/jslan/OneDrive/Documents/INTERACT/R Studio Projects/AAA_Victoria/IBIMS_2019.shp")
+st_crs(vic_int_2019)
+```
+# PLot Vic 2019 shp 
+```{r}
+
+vic_int_t2 <- st_transform(vic_int_2019, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
+st_crs(vic_int_t2)
+vic_int_t2
+vic_int_t2$AAA <- vic_int_t2$AAA %>% replace_na(0)
+vic_int_plot_2 <- ggplot() + 
+                  scale_fill_gradient2(name="Count of GPS points", low="lightblue", high = "darkblue") +
+                  geom_sf(data = vic_int_t, aes(colour = AAA)) +
+                  coord_sf(
+                      xlim = sf::st_bbox(vic_int_t)[c(1,3)],
+                      ylim = sf::st_bbox(vic_int_t)[c(2,4)]) + 
+                  scale_color_manual(name="Cycling Infrastructure", labels=c("Existing", "AAA"), values=c("grey80", "black")) +
+                  annotation_scale() + 
+                  theme_map()
+plot(vic_int_plot_2)
+ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
 ```
 
 # Interventions SenseDoc Data
 
 ### Victoria
+
+Apply 70m Buffer to 2019 data
+```{r}
+victoria_buffer = st_buffer(vic_int_2019, dist = 70)
+plot(victoria_buffer)
+```
+
+
 
 ```{r}
 
