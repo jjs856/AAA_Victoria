@@ -235,6 +235,7 @@ plot(vic_gps_points)
 # Apply 70m buffer to Pandora bike lane
 
 # Read in 2017 Shape file
+
 ```{r}
 getwd()
 #Note to self all file formats must be in same directory (I think it's .shp and .shx that really matter)
@@ -275,6 +276,37 @@ pandora <- filter(vic_int, AAA == "V")
 ```{r}
 pandora_buffer = st_buffer(pandora$geometry, dist = 70) # According to stack exchangers the distance is in meters
 plot(pandora_buffer)
+```
+# 2017 join
+
+# Try to join GPS participants and buffer and see what % is inside buffer
+```{r}
+join_gps_to_buffer <- lapply(sd_data, function(i) {
+  i %>%
+    st_join(pandora_buffer)
+})
+filter_gps_in_buffer <- lapply(join_gps_to_buffer, function(i) {
+  i %>%
+    filter(!(is.na(FullDescr)))
+})
+
+```
+
+# Run intersections code for bike_lanes_1 (pandora) and gps participants
+# figure out what buf is, and make it. 
+```{r}
+buf_intersections <- st_intersection(buf$geometry, pandora$geometry) #this works now and hasn’t worked before until today
+plot(buf_intersections)
+buf_intersections_df <- as.data.frame(buf_intersections)
+buf_intersections %>% count(value)
+plot(buf_intersections[1:500])
+```
+
+
+
+# Create dummy variable for 2019 bike lanes - Do after intersection for Pandora 2017 is done
+```{r}
+
 ```
 
 # Read in 2019 Shape file
@@ -321,6 +353,21 @@ plot(fort_buffer)
 # Need Johnson ((18/19) and Wharf (18/19)
 
 ```{r}
+jw <- filter(vic_int_2019, AAA == "S")
+```
+
+# Johnson and Wharf buffers: 
+1. Create dummy variable, pulling information out of Notes about which lane it is. 
+2. Identify lanes with a code under new variable
+3. Filter for variable, then apply buffer as above. 
+
+```{r}
+jw_buffer = st_buffer(jw$geometry, dist = 70) # According to stack exchangers the distance is in meters. How to confirm?
+plot(jw_buffer)
+
+```
+
+```{r}
 
 vic_cma <- get_census(dataset='CA16', regions=list(CMA="59935"),
                           level='CMA', use_cache = TRUE, geo_format = "sf")
@@ -346,6 +393,8 @@ vic_int_plot <- ggplot() +
 plot(vic_int_plot)
 ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
 ```
+
+# 
 
 # GPS Maps
 
