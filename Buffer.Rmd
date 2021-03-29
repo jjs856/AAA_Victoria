@@ -52,6 +52,8 @@ library(kableExtra)
 4. Figures
 5. Visualize GPS points + bike infrastructure 2017/ 2019
 6. Apply 70m buffer -> st_buffer()
+7. Convert buffer file to sf.dataframe
+8. Run st_intersect for buffer vs participant gps data
 
 # Filter SD Participants
 ```{r}
@@ -64,21 +66,6 @@ SD_vic_all <- full_join(SD_vic_one, SD_vic_two)
 
 tabyl(SD_vic_all$interact_id)
 ```
- 
-### Reading in the physical activity data from SenseDoc
-
-```{ arning=FALSE}
-data_temp <- NULL
-data_temp <- dir(path = "/Users/jslan/Documents/INTERACT/data", full.names = TRUE, pattern = "*_sd.csv", recursive = TRUE) %>%
-   purrr::map(function(i){
-     dfhx <- read.csv(i, header = TRUE)
-     temp <- bind_rows(data_temp, dfhx)
-   })
-sd_data <- bind_rows(data_temp)
-rm(data_temp)
-table(sd_data$city)
-```
-
 ## Some basic cleaning
 
 ```{r warning=FALSE}
@@ -107,7 +94,6 @@ sd_data <- sd_data %>%
   mutate(
       minutes_id_date = sum(minutes)
   )
-
 ```
 
 ### MPVA Minutes SenseDoc
@@ -223,7 +209,7 @@ plot(victoria_activity)
 ggsave("victoria_activity.jpg", dpi = 150, height = 4, width = 6)
 ```
 
-# Vctoria GPS points without basemap
+# Vctoria GPS points without basemap (Doesn't work yet)
 
 ```{r}
 vic_gps_points <- ggplot() + 
@@ -268,34 +254,58 @@ ggsave("vic_int_plot.jpg", dpi = 150, height = 4, width = 6)
 1. Filter for Victoria # I was stuck on using subset() which wouldn't work for the buffer. 
 2. Filter for pandora
 3. Apply 70m buffer
+4. Convert pandora_buffer to sf.dataframe (geometry)
+5. Check to make sure GPS data (from sd_vic_all) is in lat/long
 
 ```{r}
 pandora <- filter(vic_int, AAA == "V")
 ```
 
 ```{r}
+# convert pandora to sf
+pandora <- st_transform(pandora, 26910)
+# apply 70m buffer
 pandora_buffer = st_buffer(pandora$geometry, dist = 70) # According to stack exchangers the distance is in meters
 plot(pandora_buffer)
 ```
-# 2017 join
+# GET INTERSECTIONS
+1. Convert pandora_buffer to buf using st.transform (to go from list to geometry)
+2. Convert sd_data to sf.dataframe using convery sf
+3. Run intersection on buf and sd_data
+4. When I get that working, repeat for all 4 bike lanes.
 
-# Try to join GPS participants and buffer and see what % is inside buffer
+# Convert sd_data lat/long to polygon using st_as_sf
+
 ```{r}
-join_gps_to_buffer <- lapply(sd_data, function(i) {
-  i %>%
-    st_join(pandora_buffer)
-})
-filter_gps_in_buffer <- lapply(join_gps_to_buffer, function(i) {
-  i %>%
-    filter(!(is.na(FullDescr)))
-})
+sd_as_poly <- sd_data %>%
+  st_as_sf((coords = sd_data$lon & sd_data$lat), crs = 4326) %>% 
+  summarize(geometry = st_combine(geometry), by = sd_data$interact_id) %>%
+  st_cast("POLYGON")
+sd_as_poly
+#doesnt work
 
+sd_as_poly <- st_sfc((st_polygon(sd_data)), crs = 4326)
+#doesnt work
 ```
 
-# Run intersections code for bike_lanes_1 (pandora) and gps participants
-# figure out what buf is, and make it. 
+
+# Create lat/long geom for sd_data
 ```{r}
-buf_intersections <- st_intersection(buf$geometry, pandora$geometry) #this works now and hasn’t worked before until today
+
+vic_sf <- st_as_sf(sd_data, crs = 4326)
+
+# Sample code
+dat$geom_transect <- as.character(dat$geom_transect)
+dat$lon <- as.numeric(sapply(strsplit(dat$geom_transect, '[(,)]'), "[[", 2))
+dat$lat <- as.numeric(sapply(strsplit(dat$geom_transect, '[(,)]'), "[[", 3))
+```
+
+
+# Run intersections code for bike_lanes_1 (pandora) and gps participants
+
+```{r}
+
+buf_intersections <- st_intersection(buf$geometry, pandora$geometry)
 plot(buf_intersections)
 buf_intersections_df <- as.data.frame(buf_intersections)
 buf_intersections %>% count(value)
@@ -304,10 +314,8 @@ plot(buf_intersections[1:500])
 
 
 
-# Create dummy variable for 2019 bike lanes - Do after intersection for Pandora 2017 is done
-```{r}
 
-```
+
 
 # Read in 2019 Shape file
 
@@ -318,7 +326,8 @@ st_crs(vic_int_2019)
 # Plot Vic 2019 shp 
 ```{r}
 
-vic_int_t2 <- st_transform(vic_int_2019, crs = 4326, "+proj=longlat +ellps=WGS84 +datum=WGS84")
+vic_int_t2 <- st_transform(vic_int_2019, 
+                           , "+proj=longlat +ellps=WGS84 +datum=WGS84")
 st_crs(vic_int_t2)
 vic_int_t2
 vic_int_t2$AAA <- vic_int_t2$AAA %>% replace_na(0)
