@@ -2,7 +2,10 @@
 title: "Buffer"
 author: "Jonathan Slaney"
 date: "23/02/2021"
-output: html_document
+output:
+  html_document: 
+    keep_md: yes
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -247,13 +250,17 @@ ggsave("vic_int_w1_plot.jpg", dpi = 150, height = 4, width = 6)
 ### Formatting and create buffer
 ```{r}
 table(vic_int_t$AAA)
-pandora <- filter(vic_int_t, AAA == "V")
+w1_intervention <- filter(vic_int_t, AAA == "V")
 
 # convert pandora to sf
-pandora <- st_transform(pandora, 26910)
-# apply 70m buffer
-pandora_buffer = st_buffer(pandora$geometry, dist = 70) # According to stack exchangers the distance is in meters
-plot(pandora_buffer)
+w1_intervention <- st_transform(w1_intervention, 26910)
+
+# apply 50m, 70m, and 100m buffer
+w1_intervention_buffer_70 = st_buffer(w1_intervention$geometry, dist = 70) 
+w1_intervention_buffer_50 = st_buffer(w1_intervention$geometry, dist = 50) 
+w1_intervention_buffer_100 = st_buffer(w1_intervention$geometry, dist = 100) 
+
+plot(w1_intervention_buffer_70)
 ```
 
 # Read in 2019 Shape file
@@ -294,9 +301,11 @@ w2_intervention_1 <- st_combine(w2_intervention)
 w2_intervention_1 <- st_as_sf(w2_intervention_1)
 w2_intervention_1 <- st_transform(w2_intervention_1, 26910)
 
-# apply 70m buffer
-w2_intervention_buffer = st_buffer(w2_intervention_1$x, dist = 70) # According to stack exchangers the distance is in meters
-plot(w2_intervention_buffer)
+w2_intervention_buffer_70 = st_buffer(w2_intervention_1$x, dist = 70) # According to stack exchangers the distance is in meters
+w2_intervention_buffer_50 = st_buffer(w2_intervention_1$x, dist = 50)
+w2_intervention_buffer_100 = st_buffer(w2_intervention_1$x, dist = 100)
+
+plot(w2_intervention_buffer_70)
 ```
 
 # Get intersections of points in buffers for each wave
@@ -314,18 +323,28 @@ SD_vic_one_sf <- st_as_sf(SD_vic_one, coords = c("lon", "lat"), crs = 4326)
 ### Run intersections code for bike_lanes_1 (pandora) and gps participants
 
 ```{r}
-pandora_buffer <- st_transform(pandora_buffer, 4326)
-pandora_buffer <- st_as_sf(pandora_buffer)
+w1_intervention_buffer_70 <- st_transform(w1_intervention_buffer_70, 4326)
+w1_intervention_buffer_70 <- st_as_sf(w1_intervention_buffer_70)
 
-SD_vic_one_sf$exposed <- ifelse(sf::st_intersects(SD_vic_one_sf, pandora_buffer, sparse = F), "Yes", "No")
+w1_intervention_buffer_50 <- st_transform(w1_intervention_buffer_50, 4326)
+w1_intervention_buffer_50 <- st_as_sf(w1_intervention_buffer_50)
 
-table(SD_vic_one_sf$exposed)
-SD_vic_one$exposed <- as.factor(SD_vic_one_sf$exposed)
+w1_intervention_buffer_100 <- st_transform(w1_intervention_buffer_100, 4326)
+w1_intervention_buffer_100 <- st_as_sf(w1_intervention_buffer_100)
+
+SD_vic_one_sf$exposed_70 <- ifelse(sf::st_intersects(SD_vic_one_sf, w1_intervention_buffer_70, sparse = F), 1, 0)
+SD_vic_one_sf$exposed_50 <- ifelse(sf::st_intersects(SD_vic_one_sf, w1_intervention_buffer_50, sparse = F), 1, 0)
+SD_vic_one_sf$exposed_100 <- ifelse(sf::st_intersects(SD_vic_one_sf, w1_intervention_buffer_100, sparse = F), 1, 0)
+
+table(SD_vic_one_sf$exposed_70)
+SD_vic_one$exposed_70 <- as.factor(SD_vic_one_sf$exposed_70)
+SD_vic_one$exposed_50 <- as.factor(SD_vic_one_sf$exposed_50)
+SD_vic_one$exposed_100 <- as.factor(SD_vic_one_sf$exposed_100)
 
 ggplot() + 
         geom_sf() +
-        geom_sf(data = pandora_buffer) +                
-        geom_point(aes(x = lon, y = lat, colour = exposed), data = SD_vic_one, alpha = 0.2) +
+        geom_sf(data = w1_intervention_buffer_70) +                
+        geom_point(aes(x = lon, y = lat, colour = exposed_70), data = SD_vic_one, alpha = 0.2) +
         geom_sf(data = vic_int_t) +
         annotation_scale() + 
         theme_map()
@@ -342,19 +361,29 @@ SD_vic_two_sf <- st_as_sf(SD_vic_two, coords = c("lon", "lat"), crs = 4326)
 
 
 ```{r}
-w2_intervention_buffer <- st_transform(w2_intervention_buffer, 4326)
-w2_intervention_buffer <- st_as_sf(w2_intervention_buffer)
+w2_intervention_buffer_70 <- st_transform(w2_intervention_buffer_70, 4326)
+w2_intervention_buffer_70 <- st_as_sf(w2_intervention_buffer_70)
 
-SD_vic_two_sf$exposed <- ifelse(sf::st_intersects(SD_vic_two_sf, w2_intervention_buffer, sparse = F), "Yes", "No")
+w2_intervention_buffer_50 <- st_transform(w2_intervention_buffer_50, 4326)
+w2_intervention_buffer_50 <- st_as_sf(w2_intervention_buffer_50)
 
-table(SD_vic_two_sf$exposed)
-SD_vic_two$exposed <- as.factor(SD_vic_two_sf$exposed)
+w2_intervention_buffer_100 <- st_transform(w2_intervention_buffer_100, 4326)
+w2_intervention_buffer_100 <- st_as_sf(w2_intervention_buffer_100)
+
+SD_vic_two_sf$exposed_70 <- ifelse(sf::st_intersects(SD_vic_two_sf, w2_intervention_buffer_70, sparse = F), 1, 0)
+SD_vic_two_sf$exposed_50 <- ifelse(sf::st_intersects(SD_vic_two_sf, w2_intervention_buffer_50, sparse = F), 1, 0)
+SD_vic_two_sf$exposed_100 <- ifelse(sf::st_intersects(SD_vic_two_sf, w2_intervention_buffer_100, sparse = F), 1, 0)
+
+table(SD_vic_two_sf$exposed_70)
+SD_vic_two$exposed_70 <- as.factor(SD_vic_two_sf$exposed_70)
+SD_vic_two$exposed_50 <- as.factor(SD_vic_two_sf$exposed_50)
+SD_vic_two$exposed_100 <- as.factor(SD_vic_two_sf$exposed_100)
 
 ggplot() + 
         geom_sf() +
-        geom_sf(data = w2_intervention_buffer) +                
-        geom_point(aes(x = lon, y = lat, colour = exposed), data = SD_vic_two, alpha = 0.2) +
-        geom_sf(data = w2_intervention_buffer) +
+        geom_sf(data = w2_intervention_buffer_70) +                
+        geom_point(aes(x = lon, y = lat, colour = exposed_70), data = SD_vic_two, alpha = 0.2) +
+        geom_sf(data = w2_intervention_buffer_70) +
         annotation_scale() + 
         theme_map()
 ggsave("exposed_2019.jpg", dpi = 150, height = 4, width = 6)
@@ -365,5 +394,7 @@ ggsave("exposed_2019.jpg", dpi = 150, height = 4, width = 6)
 ```{r}
 sd_data_exposure <- bind_rows(SD_vic_one, SD_vic_two)
 
-table(sd_data_exposure$wave_id, sd_data_exposure$exposed)
+table(sd_data_exposure$wave_id, sd_data_exposure$exposed_70)
+
+write_csv(sd_data_exposure, "/Users/dfuller/Documents/INTERACT/data/sensors/sd_data_exposure.csv")
 ```
