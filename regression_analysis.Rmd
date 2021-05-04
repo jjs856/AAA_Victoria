@@ -108,6 +108,8 @@ data_exposure <- data %>%
                     )
 
 data_exposure$date_time <- as.factor(data_exposure$date)
+
+data_exposure$speed_gust_km_h <- as.numeric(data_exposure$speed_gust_km_h)
 ```
 
 ### Histograms of absolute exposure (Total number of minutes)
@@ -117,13 +119,23 @@ summary(data_exposure$sum_exp_70)
 
 ### Removing participants with more than 500 minutes of exposure
 data_exposure$sum_exp_70 <- if_else(data_exposure$sum_exp_70 > 500, NA_real_, data_exposure$sum_exp_70)
+data_exposure$sum_exp_50 <- if_else(data_exposure$sum_exp_50 > 500, NA_real_, data_exposure$sum_exp_50)
+data_exposure$sum_exp_100 <- if_else(data_exposure$sum_exp_100 > 500, NA_real_, data_exposure$sum_exp_100)
 
 data_exposure <- data_exposure %>% 
                     mutate(
-                      sum_exp_70_quint = ntile(sum_exp_70, 5)
+                      sum_exp_70_quint = ntile(sum_exp_70, 5),
+                      sum_exp_50_quint = ntile(sum_exp_50, 5),
+                      sum_exp_100_quint = ntile(sum_exp_100, 5)
                       )
+
 data_exposure$sum_exp_70_quint <- as.factor(data_exposure$sum_exp_70_quint)
+data_exposure$sum_exp_50_quint <- as.factor(data_exposure$sum_exp_50_quint)
+data_exposure$sum_exp_100_quint <- as.factor(data_exposure$sum_exp_100_quint)
+
 table(data_exposure$sum_exp_70_quint)
+table(data_exposure$sum_exp_100_quint)
+
 ```
 
 ```{r}
@@ -142,13 +154,22 @@ summary(data_exposure$rel_exp_70)
 
 ### Removing participants with more than 40% exposure
 data_exposure$rel_exp_70 <- if_else(data_exposure$rel_exp_70 > 0.40, NA_real_, data_exposure$rel_exp_70)
+data_exposure$rel_exp_50 <- if_else(data_exposure$rel_exp_50 > 0.40, NA_real_, data_exposure$rel_exp_50)
+data_exposure$rel_exp_100 <- if_else(data_exposure$rel_exp_100 > 0.40, NA_real_, data_exposure$rel_exp_100)
 
 data_exposure <- data_exposure %>% 
                     mutate(
-                      rel_exp_70_quint = ntile(rel_exp_70, 5)
+                      rel_exp_70_quint = ntile(rel_exp_70, 5),
+                      rel_exp_50_quint = ntile(rel_exp_50, 5),
+                      rel_exp_100_quint = ntile(rel_exp_100, 5)
                       )
 data_exposure$rel_exp_70_quint <- as.factor(data_exposure$rel_exp_70_quint)
+data_exposure$rel_exp_50_quint <- as.factor(data_exposure$rel_exp_50_quint)
+data_exposure$rel_exp_100_quint <- as.factor(data_exposure$rel_exp_100_quint)
+
 table(data_exposure$rel_exp_70_quint)
+table(data_exposure$rel_exp_100_quint)
+
 ```
 
 ```{r}
@@ -214,10 +235,12 @@ MLM models with person level random intercepts using the lmer package
 
 ```{r}
 ### Null Model
-lmer_null_exp70_ln <- lmer(mvpa ~ (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_null_exp70_ln <- lmer(mvpa ~ 1 + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_null_exp70_ln)
 broom.mixed::glance(lmer_null_exp70_ln)
+```
 
+```{r}
 ### Absolute Model Continuous
 lmer_abs_exp70_ln <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_ln)
@@ -229,16 +252,95 @@ summary(lmer_abs_exp70_q)
 broom.mixed::glance(lmer_abs_exp70_q)
 ```
 
+### Absolute exposure with a 70 meter buffer and covariates
+```{r}
+### Absolute Model Continuous
+lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp70_ln_cov)
+broom.mixed::glance(lmer_abs_exp70_ln_cov)
+
+### Absolute Model Quintiles
+lmer_abs_exp70_q_cov <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp70_q_cov)
+broom.mixed::glance(lmer_abs_exp70_q_cov)
+```
+
+## Relative Exposure
+
 ### Relative exposure with a 70 meter buffer and no covariates
 
 ```{r}
 ### Linear exposure
-lmer_rel_exp_ln <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + (1 | interact_id), data = data_exposure)
+lmer_rel_exp_ln <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_ln)
 
 ### Quintiles of exposure
-lmer_rel_exp_q <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + (1 | interact_id), data = data_exposure)
+lmer_rel_exp_q <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_q)
 ```
 
+### Relative exposure with a 70 meter buffer and covariates
 
+```{r}
+### Linear exposure
+lmer_rel_exp_ln_cov <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp_ln_cov)
+
+### Quintiles of exposure
+lmer_rel_exp_q_cov <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp_q_cov)
+```
+
+# Sensitivity Analysis for different buffers
+
+## 50 Meter Buffer
+
+Absolute Exposure 
+
+```{r}
+### Absolute Model Continuous
+lmer_abs_exp50_ln <- lmer(mvpa ~ sum_exp_50*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp50_ln)
+
+### Absolute Model Quintiles
+lmer_abs_exp50_q <- lmer(mvpa ~ sum_exp_50_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp50_q)
+```
+
+### Relative Exposure
+
+```{r}
+### Linear exposure
+lmer_rel_exp50_ln <- lmer(mvpa ~ rel_exp_50*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp50_ln)
+
+### Quintiles of exposure
+lmer_rel_exp50_q <- lmer(mvpa ~ rel_exp_50_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp50_q)
+```
+
+## 100 Meter Buffer
+
+Absolute Exposure 
+
+```{r}
+### Absolute Model Continuous
+lmer_abs_exp100_ln <- lmer(mvpa ~ sum_exp_100*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp100_ln)
+
+### Absolute Model Quintiles
+lmer_abs_exp100_q <- lmer(mvpa ~ sum_exp_100_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_abs_exp100_q)
+```
+
+### Relative Exposure
+
+```{r}
+### Linear exposure
+lmer_rel_exp100_ln <- lmer(mvpa ~ rel_exp_100*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp100_ln)
+
+### Quintiles of exposure
+lmer_rel_exp100_q <- lmer(mvpa ~ rel_exp_100_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+summary(lmer_rel_exp100_q)
+```
