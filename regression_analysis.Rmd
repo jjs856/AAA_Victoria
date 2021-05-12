@@ -86,9 +86,9 @@ data_exposure <- data %>%
                       mvpa = first(total_mvpa_minutes),
                       sed = first(total_sed_minutes),
                       light = first(total_light_pa_minutes),
-                      rel_exp_70 = sum(exposed_70)/n(),
-                      rel_exp_50 = sum(exposed_50)/n(),
-                      rel_exp_100 = sum(exposed_100)/n(),
+                      rel_exp_70 = sum(exposed_70)/n()*100,
+                      rel_exp_50 = sum(exposed_50)/n()*100,
+                      rel_exp_100 = sum(exposed_100)/n()*100,
                       minutes = first(minutes_id_date),
                       mean_temp_c = first(mean_temp_c),
                       total_precip_mm = first(total_precip_mm),
@@ -257,11 +257,13 @@ broom.mixed::glance(lmer_abs_exp70_q)
 ### Absolute Model Continuous
 lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_ln_cov)
+confint(lmer_abs_exp70_ln_cov)
 broom.mixed::glance(lmer_abs_exp70_ln_cov)
 
 ### Absolute Model Quintiles
 lmer_abs_exp70_q_cov <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_q_cov)
+confint(lmer_abs_exp70_q_cov)
 broom.mixed::glance(lmer_abs_exp70_q_cov)
 ```
 
@@ -285,10 +287,12 @@ summary(lmer_rel_exp_q)
 ### Linear exposure
 lmer_rel_exp_ln_cov <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_ln_cov)
+confint(lmer_rel_exp_ln_cov)
 
 ### Quintiles of exposure
 lmer_rel_exp_q_cov <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_q_cov)
+confint(lmer_rel_exp_q_cov)
 ```
 
 # Sensitivity Analysis for different buffers
