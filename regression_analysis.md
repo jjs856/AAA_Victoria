@@ -397,9 +397,9 @@ summary(data_exposure$rel_exp_70)
 
 ```r
 ### Removing participants with more than 40% exposure
-data_exposure$rel_exp_70 <- if_else(data_exposure$rel_exp_70 > 0.40, NA_real_, data_exposure$rel_exp_70)
-data_exposure$rel_exp_50 <- if_else(data_exposure$rel_exp_50 > 0.40, NA_real_, data_exposure$rel_exp_50)
-data_exposure$rel_exp_100 <- if_else(data_exposure$rel_exp_100 > 0.40, NA_real_, data_exposure$rel_exp_100)
+data_exposure$rel_exp_70 <- if_else(data_exposure$rel_exp_70 > 40, NA_real_, data_exposure$rel_exp_70)
+data_exposure$rel_exp_50 <- if_else(data_exposure$rel_exp_50 > 40, NA_real_, data_exposure$rel_exp_50)
+data_exposure$rel_exp_100 <- if_else(data_exposure$rel_exp_100 > 40, NA_real_, data_exposure$rel_exp_100)
 
 data_exposure <- data_exposure %>% 
                     mutate(
@@ -417,7 +417,7 @@ table(data_exposure$rel_exp_70_quint)
 ```
 ## 
 ##      1      2      3      4      5 
-## 126591 126295 126030 125776 125463
+## 245996 245424 244873 244391 243790
 ```
 
 ```r
@@ -427,7 +427,7 @@ table(data_exposure$rel_exp_100_quint)
 ```
 ## 
 ##      1      2      3      4      5 
-## 113449 113181 112944 112708 112425
+## 244839 244273 243726 243248 242649
 ```
 
 
@@ -445,7 +445,7 @@ plot(rel_exposure_histo)
 ```
 
 ```
-## Warning: Removed 633913 rows containing non-finite values (stat_bin).
+## Warning: Removed 39594 rows containing non-finite values (stat_bin).
 ```
 
 ![](regression_analysis_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
@@ -513,11 +513,11 @@ plot(rel_exp_pa_scatter)
 ```
 
 ```
-## Warning: Removed 633913 rows containing non-finite values (stat_smooth).
+## Warning: Removed 39594 rows containing non-finite values (stat_smooth).
 ```
 
 ```
-## Warning: Removed 633913 rows containing missing values (geom_point).
+## Warning: Removed 39594 rows containing missing values (geom_point).
 ```
 
 ![](regression_analysis_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
@@ -546,12 +546,12 @@ modelsummary(lm_models, fmt = "%.2f", statistic = 'conf.int')
   <tr>
    <td style="text-align:left;"> (Intercept) </td>
    <td style="text-align:center;"> 33.28 </td>
-   <td style="text-align:center;"> 34.90 </td>
+   <td style="text-align:center;"> 33.57 </td>
   </tr>
   <tr>
    <td style="text-align:left;">  </td>
    <td style="text-align:center;"> [33.19, 33.36] </td>
-   <td style="text-align:center;"> [34.79, 35.01] </td>
+   <td style="text-align:center;"> [33.49, 33.66] </td>
   </tr>
   <tr>
    <td style="text-align:left;"> sum_exp_70 </td>
@@ -566,12 +566,12 @@ modelsummary(lm_models, fmt = "%.2f", statistic = 'conf.int')
   <tr>
    <td style="text-align:left;"> factor(wave_id)2 </td>
    <td style="text-align:center;"> 2.63 </td>
-   <td style="text-align:center;"> 4.53 </td>
+   <td style="text-align:center;"> 1.97 </td>
   </tr>
   <tr>
    <td style="text-align:left;">  </td>
    <td style="text-align:center;"> [2.50, 2.76] </td>
-   <td style="text-align:center;"> [4.29, 4.78] </td>
+   <td style="text-align:center;"> [1.83, 2.10] </td>
   </tr>
   <tr>
    <td style="text-align:left;"> sum_exp_70 × factor(wave_id)2 </td>
@@ -586,57 +586,57 @@ modelsummary(lm_models, fmt = "%.2f", statistic = 'conf.int')
   <tr>
    <td style="text-align:left;"> rel_exp_70 </td>
    <td style="text-align:center;">  </td>
-   <td style="text-align:center;"> -6.38 </td>
+   <td style="text-align:center;"> 0.59 </td>
   </tr>
   <tr>
    <td style="text-align:left;">  </td>
    <td style="text-align:center;">  </td>
-   <td style="text-align:center;"> [-7.49, -5.28] </td>
+   <td style="text-align:center;"> [0.57, 0.60] </td>
   </tr>
   <tr>
    <td style="text-align:left;"> rel_exp_70 × factor(wave_id)2 </td>
    <td style="text-align:center;">  </td>
-   <td style="text-align:center;"> -29.24 </td>
+   <td style="text-align:center;"> -0.21 </td>
   </tr>
   <tr>
    <td style="text-align:left;box-shadow: 0px 1px">  </td>
    <td style="text-align:center;box-shadow: 0px 1px">  </td>
-   <td style="text-align:center;box-shadow: 0px 1px"> [-31.01, -27.47] </td>
+   <td style="text-align:center;box-shadow: 0px 1px"> [-0.23, -0.19] </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Num.Obs. </td>
    <td style="text-align:center;"> 1258039 </td>
-   <td style="text-align:center;"> 630155 </td>
+   <td style="text-align:center;"> 1224474 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> R2 </td>
    <td style="text-align:center;"> 0.021 </td>
-   <td style="text-align:center;"> 0.005 </td>
+   <td style="text-align:center;"> 0.007 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> R2 Adj. </td>
    <td style="text-align:center;"> 0.021 </td>
-   <td style="text-align:center;"> 0.005 </td>
+   <td style="text-align:center;"> 0.007 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> AIC </td>
    <td style="text-align:center;"> 12474739.8 </td>
-   <td style="text-align:center;"> 6320408.5 </td>
+   <td style="text-align:center;"> 12132552.6 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> BIC </td>
    <td style="text-align:center;"> 12474800.0 </td>
-   <td style="text-align:center;"> 6320465.3 </td>
+   <td style="text-align:center;"> 12132612.7 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Log.Lik. </td>
    <td style="text-align:center;"> -6237364.880 </td>
-   <td style="text-align:center;"> -3160199.251 </td>
+   <td style="text-align:center;"> -6066271.299 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> F </td>
    <td style="text-align:center;"> 8964.212 </td>
-   <td style="text-align:center;"> 986.314 </td>
+   <td style="text-align:center;"> 2982.632 </td>
   </tr>
 </tbody>
 </table>
@@ -869,7 +869,7 @@ summary(lmer_abs_exp70_ln_cov)
 ```
 
 ```r
-confint(lmer_abs_exp70_ln_cov)
+confint.merMod(lmer_abs_exp70_ln_cov)
 ```
 
 ```
@@ -975,7 +975,7 @@ summary(lmer_abs_exp70_q_cov)
 ```
 
 ```r
-confint(lmer_abs_exp70_q_cov)
+confint.merMod(lmer_abs_exp70_q_cov)
 ```
 
 ```
@@ -1041,31 +1041,31 @@ summary(lmer_rel_exp_ln)
 ##     interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 5764439
+## REML criterion at convergence: 11380651
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -5.9724 -0.5727 -0.0011  0.4413  4.9159 
+## -5.5996 -0.6125 -0.0567  0.5016  5.3120 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 655.3    25.60   
-##  interact_id (Intercept) 951.6    30.85   
-##  Residual                546.6    23.38   
-## Number of obs: 630155, groups:  date_time, 314; interact_id, 194
+##  date_time   (Intercept) 398.7    19.97   
+##  interact_id (Intercept) 605.4    24.60   
+##  Residual                634.6    25.19   
+## Number of obs: 1224474, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
-##                             Estimate Std. Error t value
-## (Intercept)                  27.5699     2.9505   9.344
-## rel_exp_70                    4.5335     0.4926   9.203
-## factor(wave_id)2              0.3365     2.9943   0.112
-## rel_exp_70:factor(wave_id)2 -39.7329     0.9180 -43.284
+##                               Estimate Std. Error t value
+## (Intercept)                  34.469966   2.260102  15.252
+## rel_exp_70                    0.401005   0.008087  49.585
+## factor(wave_id)2            -11.629952   2.164761  -5.372
+## rel_exp_70:factor(wave_id)2   0.289485   0.011075  26.137
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__70 fc(_)2
-## rel_exp_70  -0.006              
-## fctr(wv_d)2 -0.442  0.006       
-## rl__70:(_)2  0.005 -0.560 -0.023
+## rel_exp_70  -0.008              
+## fctr(wv_d)2 -0.456  0.005       
+## rl__70:(_)2  0.004 -0.710 -0.010
 ```
 
 ```r
@@ -1080,43 +1080,43 @@ summary(lmer_rel_exp_q)
 ##     (1 | interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 5766659
+## REML criterion at convergence: 11390678
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -5.5220 -0.5769 -0.0008  0.4239  4.8934 
+## -5.6732 -0.6171 -0.0682  0.4862  5.2779 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 653.7    25.57   
-##  interact_id (Intercept) 954.7    30.90   
-##  Residual                548.6    23.42   
-## Number of obs: 630155, groups:  date_time, 314; interact_id, 194
+##  date_time   (Intercept) 395.6    19.89   
+##  interact_id (Intercept) 614.7    24.79   
+##  Residual                639.8    25.29   
+## Number of obs: 1224474, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
-##                                     Estimate Std. Error t value
-## (Intercept)                        28.008444   2.952231   9.487
-## rel_exp_70_quint2                   0.009753   0.107489   0.091
-## rel_exp_70_quint3                   0.014013   0.107549   0.130
-## rel_exp_70_quint4                   0.022555   0.107603   0.210
-## rel_exp_70_quint5                   0.032862   0.107671   0.305
-## factor(wave_id)2                   -3.106395   2.992894  -1.038
-## rel_exp_70_quint2:factor(wave_id)2 -0.010006   0.215407  -0.046
-## rel_exp_70_quint3:factor(wave_id)2 -0.006069   0.215506  -0.028
-## rel_exp_70_quint4:factor(wave_id)2 -0.013846   0.215618  -0.064
-## rel_exp_70_quint5:factor(wave_id)2 -0.016296   0.215752  -0.076
+##                                      Estimate Std. Error t value
+## (Intercept)                         3.570e+01  2.267e+00  15.749
+## rel_exp_70_quint2                   1.118e-02  9.548e-02   0.117
+## rel_exp_70_quint3                   1.911e-02  9.554e-02   0.200
+## rel_exp_70_quint4                   2.926e-02  9.558e-02   0.306
+## rel_exp_70_quint5                   3.882e-02  9.564e-02   0.406
+## factor(wave_id)2                   -1.032e+01  2.158e+00  -4.781
+## rel_exp_70_quint2:factor(wave_id)2  1.163e-03  1.458e-01   0.008
+## rel_exp_70_quint3:factor(wave_id)2  6.265e-03  1.459e-01   0.043
+## rel_exp_70_quint4:factor(wave_id)2  4.671e-03  1.460e-01   0.032
+## rel_exp_70_quint5:factor(wave_id)2  9.524e-04  1.461e-01   0.007
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__70_2 rl__70_3 rl__70_4 rl__70_5 fc(_)2 r__70_2: r__70_3:
-## rl_xp_70_q2 -0.018                                                             
-## rl_xp_70_q3 -0.018  0.499                                                      
-## rl_xp_70_q4 -0.018  0.499    0.499                                             
-## rl_xp_70_q5 -0.018  0.499    0.498    0.498                                    
-## fctr(wv_d)2 -0.441  0.018    0.018    0.018    0.018                           
-## r__70_2:(_)  0.009 -0.499   -0.249   -0.249   -0.249   -0.036                  
-## r__70_3:(_)  0.009 -0.249   -0.499   -0.249   -0.249   -0.036  0.499           
-## r__70_4:(_)  0.009 -0.249   -0.249   -0.499   -0.249   -0.036  0.499    0.499  
-## r__70_5:(_)  0.009 -0.249   -0.249   -0.249   -0.499   -0.036  0.499    0.498  
+## rl_xp_70_q2 -0.021                                                             
+## rl_xp_70_q3 -0.021  0.499                                                      
+## rl_xp_70_q4 -0.021  0.499    0.499                                             
+## rl_xp_70_q5 -0.021  0.499    0.498    0.498                                    
+## fctr(wv_d)2 -0.454  0.022    0.022    0.022    0.022                           
+## r__70_2:(_)  0.014 -0.655   -0.327   -0.327   -0.326   -0.034                  
+## r__70_3:(_)  0.014 -0.327   -0.655   -0.326   -0.326   -0.034  0.499           
+## r__70_4:(_)  0.014 -0.327   -0.326   -0.655   -0.326   -0.034  0.499    0.499  
+## r__70_5:(_)  0.014 -0.326   -0.326   -0.326   -0.655   -0.034  0.499    0.498  
 ##             r__70_4:
 ## rl_xp_70_q2         
 ## rl_xp_70_q3         
@@ -1145,39 +1145,39 @@ summary(lmer_rel_exp_ln_cov)
 ##     (1 | date_time) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 3752189
+## REML criterion at convergence: 6332248
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -4.4853 -0.5558 -0.0006  0.4797  5.1648 
+## -3.8824 -0.5607 -0.0441  0.5078  5.3225 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 1067.1   32.67   
-##  interact_id (Intercept) 1241.3   35.23   
-##  Residual                 485.6   22.04   
-## Number of obs: 415555, groups:  date_time, 200; interact_id, 124
+##  date_time   (Intercept) 332.3    18.23   
+##  interact_id (Intercept) 517.7    22.75   
+##  Residual                557.9    23.62   
+## Number of obs: 690856, groups:  date_time, 222; interact_id, 134
 ## 
 ## Fixed effects:
-##                                          Estimate Std. Error t value
-## (Intercept)                              -19.0831    20.6542  -0.924
-## rel_exp_70                                 0.4159     0.5287   0.787
-## factor(wave_id)2                          13.5784     7.0225   1.934
-## mean_temp_c                                1.2277     0.5663   2.168
-## total_precip_mm                           -0.1738     0.4725  -0.368
-## speed_gust_km_h                            0.3900     0.2548   1.531
-## gender_recode2Transgender                -27.7747    36.0812  -0.770
-## gender_recode2Woman                      -13.0860     6.6628  -1.964
-## income_recode100_200                      21.2360    17.8222   1.192
-## income_recode20_49 999                    25.1849    18.2219   1.382
-## income_recode200+                         27.5654    39.5312   0.697
-## income_recode50_99 999                    10.7010    17.2440   0.621
-## income_recodeDon't know/prefer no answer  13.2950    20.5704   0.646
-## age_recode30_39                            2.1388    10.9870   0.195
-## age_recode40_49                            3.1598    11.6052   0.272
-## age_recode50_64                            1.5450    12.6365   0.122
-## age_recode65+                              2.8364    13.1088   0.216
-## rel_exp_70:factor(wave_id)2               -2.3361     2.4464  -0.955
+##                                            Estimate Std. Error t value
+## (Intercept)                               32.419049  12.564170   2.580
+## rel_exp_70                                 0.460871   0.008572  53.766
+## factor(wave_id)2                           1.064848   3.275756   0.325
+## mean_temp_c                               -0.657558   0.304752  -2.158
+## total_precip_mm                            0.024473   0.257883   0.095
+## speed_gust_km_h                            0.097748   0.138123   0.708
+## gender_recode2Transgender                -23.739208  16.594443  -1.431
+## gender_recode2Woman                       -9.986631   4.128848  -2.419
+## income_recode100_200                      -0.967093  11.315495  -0.085
+## income_recode20_49 999                    12.759202  11.761226   1.085
+## income_recode200+                         19.629923  25.465394   0.771
+## income_recode50_99 999                    -0.277290  10.986668  -0.025
+## income_recodeDon't know/prefer no answer   4.214822  13.197713   0.319
+## age_recode30_39                            8.070241   6.477727   1.246
+## age_recode40_49                           11.102231   6.872415   1.615
+## age_recode50_64                            9.756712   7.752076   1.259
+## age_recode65+                             -0.550469   8.169965  -0.067
+## rel_exp_70:factor(wave_id)2               -0.352994   0.016688 -21.152
 ```
 
 ```
@@ -1188,7 +1188,7 @@ summary(lmer_rel_exp_ln_cov)
 ```
 
 ```r
-confint(lmer_rel_exp_ln_cov)
+confint.merMod(lmer_rel_exp_ln_cov)
 ```
 
 ```
@@ -1196,28 +1196,28 @@ confint(lmer_rel_exp_ln_cov)
 ```
 
 ```
-##                                                 2.5 %      97.5 %
-## .sig01                                    29.33296773  35.7697770
-## .sig02                                    29.72105692  38.1842335
-## .sigma                                    21.98926651  22.0840644
-## (Intercept)                              -58.26286396  20.1618355
-## rel_exp_70                                -0.62169207   1.4505848
-## factor(wave_id)2                          -0.09665424  27.2488256
-## mean_temp_c                                0.12369724   2.3287915
-## total_precip_mm                           -1.09343896   0.7463471
-## speed_gust_km_h                           -0.10621172   0.8858099
-## gender_recode2Transgender                -95.58769725  40.0239673
-## gender_recode2Woman                      -25.60343256  -0.5612155
-## income_recode100_200                     -12.26614888  54.7173800
-## income_recode20_49 999                    -9.06533454  59.4204685
-## income_recode200+                        -46.71819092 101.8570477
-## income_recode50_99 999                   -21.71203154  43.0984929
-## income_recodeDon't know/prefer no answer -25.36366953  51.9489101
-## age_recode30_39                          -18.51106045  22.7832361
-## age_recode40_49                          -18.65272165  24.9653237
-## age_recode50_64                          -22.20058782  25.2932197
-## age_recode65+                            -21.80019467  27.4690724
-## rel_exp_70:factor(wave_id)2               -7.17598283   2.4185696
+##                                                2.5 %      97.5 %
+## .sig01                                    16.4794550 19.88147277
+## .sig02                                    19.3659361 24.62237797
+## .sigma                                    23.5805996 23.65939243
+## (Intercept)                                8.5461739 56.28012150
+## rel_exp_70                                 0.4440526  0.47765378
+## factor(wave_id)2                          -5.3210336  7.44910220
+## mean_temp_c                               -1.2512946 -0.06323048
+## total_precip_mm                           -0.4782010  0.52712016
+## speed_gust_km_h                           -0.1714781  0.36697421
+## gender_recode2Transgender                -55.0275917  7.55321907
+## gender_recode2Woman                      -17.7712778 -2.20038727
+## income_recode100_200                     -22.3032320 20.36965044
+## income_recode20_49 999                    -9.4178900 34.93584217
+## income_recode200+                        -28.3885309 67.64647157
+## income_recode50_99 999                   -20.9935972 20.43918176
+## income_recodeDon't know/prefer no answer -20.6708576 29.10023521
+## age_recode30_39                           -4.1442481 20.28472701
+## age_recode40_49                           -1.8563620 24.06111337
+## age_recode50_64                           -4.8610999 24.37352819
+## age_recode65+                            -15.9549512 14.85573467
+## rel_exp_70:factor(wave_id)2               -0.3855688 -0.32014903
 ```
 
 ```r
@@ -1234,45 +1234,45 @@ summary(lmer_rel_exp_q_cov)
 ##     (1 | date_time) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 3752206
+## REML criterion at convergence: 6335156
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -4.4852 -0.5557 -0.0003  0.4800  5.1640 
+## -3.9704 -0.5600 -0.0423  0.4976  5.3464 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 1069.6   32.71   
-##  interact_id (Intercept) 1242.8   35.25   
-##  Residual                 485.6   22.04   
-## Number of obs: 415555, groups:  date_time, 200; interact_id, 124
+##  date_time   (Intercept) 324.1    18.00   
+##  interact_id (Intercept) 519.5    22.79   
+##  Residual                560.3    23.67   
+## Number of obs: 690856, groups:  date_time, 222; interact_id, 134
 ## 
 ## Fixed effects:
 ##                                            Estimate Std. Error t value
-## (Intercept)                              -19.102121  20.671342  -0.924
-## rel_exp_70_quint2                          0.005946   0.111493   0.053
-## rel_exp_70_quint3                          0.009087   0.111555   0.081
-## rel_exp_70_quint4                          0.017826   0.111613   0.160
-## rel_exp_70_quint5                          0.026336   0.111682   0.236
-## factor(wave_id)2                          13.433612   7.034273   1.910
-## mean_temp_c                                1.225710   0.566944   2.162
-## total_precip_mm                           -0.173750   0.473041  -0.367
-## speed_gust_km_h                            0.390867   0.255064   1.532
-## gender_recode2Transgender                -27.811884  36.103671  -0.770
-## gender_recode2Woman                      -13.104214   6.666919  -1.966
-## income_recode100_200                      21.240708  17.833265   1.191
-## income_recode20_49 999                    25.189984  18.233310   1.382
-## income_recode200+                         27.659723  39.555754   0.699
-## income_recode50_99 999                    10.699060  17.254808   0.620
-## income_recodeDon't know/prefer no answer  13.303105  20.583271   0.646
-## age_recode30_39                            2.177895  10.993734   0.198
-## age_recode40_49                            3.184115  11.612413   0.274
-## age_recode50_64                            1.591582  12.644369   0.126
-## age_recode65+                              2.854845  13.117012   0.218
-## rel_exp_70_quint2:factor(wave_id)2        -0.017905   0.444033  -0.040
-## rel_exp_70_quint3:factor(wave_id)2        -0.004863   0.444268  -0.011
-## rel_exp_70_quint4:factor(wave_id)2        -0.011148   0.444562  -0.025
-## rel_exp_70_quint5:factor(wave_id)2        -0.012788   0.444759  -0.029
+## (Intercept)                               32.053453  12.535069   2.557
+## rel_exp_70_quint2                          0.010354   0.097921   0.106
+## rel_exp_70_quint3                          0.017947   0.097976   0.183
+## rel_exp_70_quint4                          0.028390   0.098026   0.290
+## rel_exp_70_quint5                          0.035381   0.098088   0.361
+## factor(wave_id)2                           0.263504   3.238456   0.081
+## mean_temp_c                               -0.579268   0.300995  -1.925
+## total_precip_mm                            0.004761   0.254678   0.019
+## speed_gust_km_h                            0.092489   0.136406   0.678
+## gender_recode2Transgender                -23.363715  16.623430  -1.405
+## gender_recode2Woman                       -9.238491   4.136034  -2.234
+## income_recode100_200                      -0.526550  11.335289  -0.046
+## income_recode20_49 999                    12.895443  11.781802   1.095
+## income_recode200+                         17.638534  25.509919   0.691
+## income_recode50_99 999                     0.138276  11.005885   0.013
+## income_recodeDon't know/prefer no answer   3.898057  13.220799   0.295
+## age_recode30_39                            8.113320   6.489050   1.250
+## age_recode40_49                           10.703042   6.884436   1.555
+## age_recode50_64                            8.939917   7.765621   1.151
+## age_recode65+                             -0.939608   8.184225  -0.115
+## rel_exp_70_quint2:factor(wave_id)2         0.004989   0.247074   0.020
+## rel_exp_70_quint3:factor(wave_id)2         0.012424   0.247235   0.050
+## rel_exp_70_quint4:factor(wave_id)2         0.001892   0.247359   0.008
+## rel_exp_70_quint5:factor(wave_id)2         0.005227   0.247480   0.021
 ```
 
 ```
@@ -1283,7 +1283,7 @@ summary(lmer_rel_exp_q_cov)
 ```
 
 ```r
-confint(lmer_rel_exp_q_cov)
+confint.merMod(lmer_rel_exp_q_cov)
 ```
 
 ```
@@ -1291,34 +1291,34 @@ confint(lmer_rel_exp_q_cov)
 ```
 
 ```
-##                                                2.5 %      97.5 %
-## .sig01                                    29.3711657  35.8122579
-## .sig02                                    29.7410412  38.2088064
-## .sigma                                    21.9892811  22.0840803
-## (Intercept)                              -58.3170324  20.1756948
-## rel_exp_70_quint2                         -0.2125750   0.2244670
-## rel_exp_70_quint3                         -0.2095534   0.2277305
-## rel_exp_70_quint4                         -0.2009288   0.2365838
-## rel_exp_70_quint5                         -0.1925535   0.2452297
-## factor(wave_id)2                          -0.2668573  27.1252087
-## mean_temp_c                                0.1203889   2.3281474
-## total_precip_mm                           -1.0945241   0.7475286
-## speed_gust_km_h                           -0.1058969   0.8873404
-## gender_recode2Transgender                -95.6687591  40.0313672
-## gender_recode2Woman                      -25.6300773  -0.5716612
-## income_recode100_200                     -12.2828016  54.7444278
-## income_recode20_49 999                    -9.0822850  59.4482640
-## income_recode200+                        -46.6718593 102.0002030
-## income_recode50_99 999                   -21.7350397  43.1178936
-## income_recodeDon't know/prefer no answer -25.3804817  51.9826475
-## age_recode30_39                          -18.4847136  22.8362690
-## age_recode40_49                          -18.6424041  25.0040977
-## age_recode50_64                          -22.1690089  25.3556044
-## age_recode65+                            -21.7975324  27.5038399
-## rel_exp_70_quint2:factor(wave_id)2        -0.8881827   0.8523839
-## rel_exp_70_quint3:factor(wave_id)2        -0.8755923   0.8658928
-## rel_exp_70_quint4:factor(wave_id)2        -0.8824584   0.8601789
-## rel_exp_70_quint5:factor(wave_id)2        -0.8844710   0.8589409
+##                                                2.5 %       97.5 %
+## .sig01                                    16.2746855 19.634392291
+## .sig02                                    19.4002241 24.665394608
+## .sigma                                    23.6303290 23.709288577
+## (Intercept)                                8.2399757 55.856063917
+## rel_exp_70_quint2                         -0.1815660  0.202274862
+## rel_exp_70_quint3                         -0.1740805  0.209977425
+## rel_exp_70_quint4                         -0.1637356  0.220517843
+## rel_exp_70_quint5                         -0.1568650  0.227629605
+## factor(wave_id)2                          -6.0493922  6.575726318
+## mean_temp_c                               -1.1657332  0.007720805
+## total_precip_mm                           -0.4916779  0.501180040
+## speed_gust_km_h                           -0.1733959  0.358378790
+## gender_recode2Transgender                -54.7074843  7.983076183
+## gender_recode2Woman                      -17.0369972 -1.438907949
+## income_recode100_200                     -21.9002625 20.847565547
+## income_recode20_49 999                    -9.3205420 35.111104534
+## income_recode200+                        -30.4638735 65.739710612
+## income_recode50_99 999                   -20.6142756 20.891265807
+## income_recodeDon't know/prefer no answer -21.0314171 28.827088544
+## age_recode30_39                           -4.1226921 20.349155453
+## age_recode40_49                           -2.2781273 23.684862854
+## age_recode50_64                           -5.7035058 23.582404537
+## age_recode65+                            -16.3713867 14.493289161
+## rel_exp_70_quint2:factor(wave_id)2        -0.4792648  0.489243169
+## rel_exp_70_quint3:factor(wave_id)2        -0.4721458  0.496994359
+## rel_exp_70_quint4:factor(wave_id)2        -0.4829200  0.486704125
+## rel_exp_70_quint5:factor(wave_id)2        -0.4798218  0.490277165
 ```
 
 # Sensitivity Analysis for different buffers
@@ -1443,31 +1443,31 @@ summary(lmer_rel_exp50_ln)
 ##     interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 6124671
+## REML criterion at convergence: 11498309
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -7.8697 -0.5769 -0.0003  0.4524  4.9261 
+## -5.5642 -0.6128 -0.0560  0.4886  5.2598 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept)  976.7   31.25   
-##  interact_id (Intercept) 1214.7   34.85   
-##  Residual                 547.2   23.39   
-## Number of obs: 669460, groups:  date_time, 318; interact_id, 195
+##  date_time   (Intercept) 391.6    19.79   
+##  interact_id (Intercept) 605.3    24.60   
+##  Residual                647.5    25.45   
+## Number of obs: 1234470, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
-##                             Estimate Std. Error t value
-## (Intercept)                  32.0535     3.4408   9.316
-## rel_exp_50                   13.2653     0.4930  26.910
-## factor(wave_id)2             -8.5373     3.5720  -2.390
-## rel_exp_50:factor(wave_id)2 -44.5306     0.8824 -50.465
+##                               Estimate Std. Error t value
+## (Intercept)                  34.438751   2.251394  15.297
+## rel_exp_50                    0.482402   0.009188  52.501
+## factor(wave_id)2            -11.239663   2.144741  -5.241
+## rel_exp_50:factor(wave_id)2   0.272436   0.011994  22.714
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__50 fc(_)2
-## rel_exp_50  -0.005              
-## fctr(wv_d)2 -0.462  0.004       
-## rl__50:(_)2  0.004 -0.578 -0.017
+## rel_exp_50  -0.008              
+## fctr(wv_d)2 -0.454  0.005       
+## rl__50:(_)2  0.004 -0.751 -0.009
 ```
 
 ```r
@@ -1482,43 +1482,43 @@ summary(lmer_rel_exp50_q)
 ##     (1 | interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 6127241
+## REML criterion at convergence: 11509895
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -7.6094 -0.5772 -0.0006  0.4423  4.8945 
+## -5.6122 -0.6108 -0.0689  0.4826  5.2192 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept)  953.8   30.88   
-##  interact_id (Intercept) 1186.9   34.45   
-##  Residual                 549.3   23.44   
-## Number of obs: 669460, groups:  date_time, 318; interact_id, 195
+##  date_time   (Intercept) 391.3    19.78   
+##  interact_id (Intercept) 623.5    24.97   
+##  Residual                653.6    25.56   
+## Number of obs: 1234470, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
 ##                                      Estimate Std. Error t value
-## (Intercept)                         32.656817   3.401389   9.601
-## rel_exp_50_quint2                    0.010244   0.105382   0.097
-## rel_exp_50_quint3                    0.014772   0.105441   0.140
-## rel_exp_50_quint4                    0.024239   0.105493   0.230
-## rel_exp_50_quint5                    0.034787   0.105560   0.330
-## factor(wave_id)2                   -11.609916   3.532042  -3.287
-## rel_exp_50_quint2:factor(wave_id)2  -0.009510   0.205269  -0.046
-## rel_exp_50_quint3:factor(wave_id)2  -0.004348   0.205363  -0.021
-## rel_exp_50_quint4:factor(wave_id)2  -0.012322   0.205471  -0.060
-## rel_exp_50_quint5:factor(wave_id)2  -0.016619   0.205600  -0.081
+## (Intercept)                         3.577e+01  2.271e+00  15.749
+## rel_exp_50_quint2                   1.095e-02  9.632e-02   0.114
+## rel_exp_50_quint3                   1.881e-02  9.638e-02   0.195
+## rel_exp_50_quint4                   2.904e-02  9.642e-02   0.301
+## rel_exp_50_quint5                   3.870e-02  9.648e-02   0.401
+## factor(wave_id)2                   -1.007e+01  2.146e+00  -4.691
+## rel_exp_50_quint2:factor(wave_id)2  1.205e-03  1.467e-01   0.008
+## rel_exp_50_quint3:factor(wave_id)2  4.705e-03  1.468e-01   0.032
+## rel_exp_50_quint4:factor(wave_id)2  3.969e-03  1.468e-01   0.027
+## rel_exp_50_quint5:factor(wave_id)2  7.285e-04  1.469e-01   0.005
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__50_2 rl__50_3 rl__50_4 rl__50_5 fc(_)2 r__50_2: r__50_3:
-## rl_xp_50_q2 -0.015                                                             
-## rl_xp_50_q3 -0.015  0.499                                                      
-## rl_xp_50_q4 -0.015  0.499    0.499                                             
-## rl_xp_50_q5 -0.015  0.499    0.498    0.498                                    
-## fctr(wv_d)2 -0.462  0.015    0.015    0.015    0.015                           
-## r__50_2:(_)  0.008 -0.513   -0.256   -0.256   -0.256   -0.029                  
-## r__50_3:(_)  0.008 -0.256   -0.513   -0.256   -0.256   -0.029  0.499           
-## r__50_4:(_)  0.008 -0.256   -0.256   -0.513   -0.256   -0.029  0.499    0.499  
-## r__50_5:(_)  0.008 -0.256   -0.256   -0.256   -0.513   -0.029  0.499    0.498  
+## rl_xp_50_q2 -0.021                                                             
+## rl_xp_50_q3 -0.021  0.499                                                      
+## rl_xp_50_q4 -0.021  0.499    0.499                                             
+## rl_xp_50_q5 -0.021  0.499    0.498    0.498                                    
+## fctr(wv_d)2 -0.451  0.022    0.022    0.022    0.022                           
+## r__50_2:(_)  0.014 -0.657   -0.328   -0.328   -0.327   -0.034                  
+## r__50_3:(_)  0.014 -0.328   -0.657   -0.327   -0.327   -0.034  0.499           
+## r__50_4:(_)  0.014 -0.328   -0.327   -0.657   -0.327   -0.034  0.499    0.499  
+## r__50_5:(_)  0.014 -0.327   -0.327   -0.327   -0.657   -0.034  0.499    0.498  
 ##             r__50_4:
 ## rl_xp_50_q2         
 ## rl_xp_50_q3         
@@ -1661,31 +1661,31 @@ summary(lmer_rel_exp100_ln)
 ##     interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 5162705
+## REML criterion at convergence: 11329533
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -4.1097 -0.5733 -0.0013  0.4182  4.8704 
+## -5.5545 -0.6055 -0.0512  0.4948  5.3136 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept)  781.4   27.95   
-##  interact_id (Intercept) 1171.0   34.22   
-##  Residual                 543.4   23.31   
-## Number of obs: 564707, groups:  date_time, 305; interact_id, 190
+##  date_time   (Intercept) 403.4    20.08   
+##  interact_id (Intercept) 613.0    24.76   
+##  Residual                635.7    25.21   
+## Number of obs: 1218735, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
-##                              Estimate Std. Error t value
-## (Intercept)                   26.2235     3.2710   8.017
-## rel_exp_100                    7.6982     0.4942  15.577
-## factor(wave_id)2              -3.5084     3.3218  -1.056
-## rel_exp_100:factor(wave_id)2 -42.8401     1.0484 -40.863
+##                                Estimate Std. Error t value
+## (Intercept)                   34.456308   2.273876   15.15
+## rel_exp_100                    0.331501   0.006910   47.98
+## factor(wave_id)2             -11.845513   2.177467   -5.44
+## rel_exp_100:factor(wave_id)2   0.266548   0.009585   27.81
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__100 fc(_)2
-## rel_exp_100 -0.005               
-## fctr(wv_d)2 -0.426  0.003        
-## r__100:(_)2  0.005 -0.481  -0.018
+## rel_exp_100 -0.008               
+## fctr(wv_d)2 -0.456  0.006        
+## r__100:(_)2  0.005 -0.699  -0.013
 ```
 
 ```r
@@ -1700,43 +1700,43 @@ summary(lmer_rel_exp100_q)
 ##     (1 | interact_id)
 ##    Data: data_exposure
 ## 
-## REML criterion at convergence: 5164414
+## REML criterion at convergence: 11339177
 ## 
 ## Scaled residuals: 
 ##     Min      1Q  Median      3Q     Max 
-## -4.1132 -0.5638 -0.0014  0.4171  4.8892 
+## -5.6691 -0.6157 -0.0702  0.4864  5.2749 
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept)  812.6   28.51   
-##  interact_id (Intercept) 1185.7   34.43   
-##  Residual                 545.0   23.35   
-## Number of obs: 564707, groups:  date_time, 305; interact_id, 190
+##  date_time   (Intercept) 396.7    19.92   
+##  interact_id (Intercept) 616.7    24.83   
+##  Residual                640.8    25.31   
+## Number of obs: 1218735, groups:  date_time, 345; interact_id, 210
 ## 
 ## Fixed effects:
-##                                      Estimate Std. Error t value
-## (Intercept)                         26.772487   3.310711   8.087
-## rel_exp_100_quint2                   0.008130   0.112025   0.073
-## rel_exp_100_quint3                   0.014966   0.112087   0.134
-## rel_exp_100_quint4                   0.022833   0.112145   0.204
-## rel_exp_100_quint5                   0.035112   0.112217   0.313
-## factor(wave_id)2                    -6.040897   3.389008  -1.782
-## rel_exp_100_quint2:factor(wave_id)2 -0.008711   0.231851  -0.038
-## rel_exp_100_quint3:factor(wave_id)2 -0.013017   0.231959  -0.056
-## rel_exp_100_quint4:factor(wave_id)2 -0.022870   0.232086  -0.099
-## rel_exp_100_quint5:factor(wave_id)2 -0.026129   0.232228  -0.113
+##                                       Estimate Std. Error t value
+## (Intercept)                          3.560e+01  2.270e+00  15.683
+## rel_exp_100_quint2                   1.124e-02  9.576e-02   0.117
+## rel_exp_100_quint3                   1.929e-02  9.581e-02   0.201
+## rel_exp_100_quint4                   2.920e-02  9.586e-02   0.305
+## rel_exp_100_quint5                   3.902e-02  9.592e-02   0.407
+## factor(wave_id)2                    -1.018e+01  2.161e+00  -4.711
+## rel_exp_100_quint2:factor(wave_id)2  7.928e-04  1.463e-01   0.005
+## rel_exp_100_quint3:factor(wave_id)2  5.925e-03  1.464e-01   0.040
+## rel_exp_100_quint4:factor(wave_id)2  4.373e-03  1.464e-01   0.030
+## rel_exp_100_quint5:factor(wave_id)2  6.587e-04  1.465e-01   0.004
 ## 
 ## Correlation of Fixed Effects:
 ##             (Intr) rl__100_2 rl__100_3 rl__100_4 rl__100_5 fc(_)2 r__100_2:
-## rl_xp_100_2 -0.017                                                         
-## rl_xp_100_3 -0.017  0.499                                                  
-## rl_xp_100_4 -0.017  0.499     0.499                                        
-## rl_xp_100_5 -0.017  0.499     0.498     0.498                              
-## fctr(wv_d)2 -0.430  0.017     0.016     0.016     0.016                    
-## r__100_2:(_  0.008 -0.483    -0.241    -0.241    -0.241    -0.034          
-## r__100_3:(_  0.008 -0.241    -0.483    -0.241    -0.241    -0.034  0.499   
-## r__100_4:(_  0.008 -0.241    -0.241    -0.483    -0.241    -0.034  0.499   
-## r__100_5:(_  0.008 -0.241    -0.241    -0.241    -0.483    -0.034  0.499   
+## rl_xp_100_2 -0.021                                                         
+## rl_xp_100_3 -0.021  0.499                                                  
+## rl_xp_100_4 -0.021  0.499     0.499                                        
+## rl_xp_100_5 -0.021  0.499     0.498     0.498                              
+## fctr(wv_d)2 -0.453  0.022     0.022     0.022     0.022                    
+## r__100_2:(_  0.014 -0.655    -0.327    -0.327    -0.326    -0.034          
+## r__100_3:(_  0.014 -0.327    -0.655    -0.326    -0.326    -0.034  0.499   
+## r__100_4:(_  0.014 -0.327    -0.326    -0.655    -0.326    -0.034  0.499   
+## r__100_5:(_  0.014 -0.326    -0.326    -0.326    -0.655    -0.034  0.499   
 ##             r__100_3: r__100_4:
 ## rl_xp_100_2                    
 ## rl_xp_100_3                    
