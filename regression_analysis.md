@@ -26,7 +26,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ───────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
 ```
 
 ```
@@ -37,7 +37,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Conflicts ──────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## x tidyr::expand() masks Matrix::expand()
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()
@@ -811,7 +811,7 @@ broom.mixed::glance(lmer_abs_exp70_q)
 ## 1  25.3 -5853672. 11707371. 11707527. 11707345.     1258026
 ```
 
-### Absolute exposure with a 70 meter buffer and covariates
+### Absolute exposure with a 70 meter buffer and covariates - Random intercepts
 
 ```r
 ### Absolute Model Continuous
@@ -869,39 +869,7 @@ summary(lmer_abs_exp70_ln_cov)
 ```
 
 ```r
-confint.merMod(lmer_abs_exp70_ln_cov)
-```
-
-```
-## Computing profile confidence intervals ...
-```
-
-```
-##                                                2.5 %      97.5 %
-## .sig01                                    16.3586208 19.70977629
-## .sig02                                    18.9249967 24.06009304
-## .sigma                                    23.4642380 23.54185945
-## (Intercept)                                8.0899962 54.91238698
-## sum_exp_70                                 0.1128907  0.11797280
-## factor(wave_id)2                          -5.2762226  7.14130653
-## mean_temp_c                               -1.1309341  0.04299351
-## total_precip_mm                           -0.5108665  0.48455507
-## speed_gust_km_h                           -0.1948405  0.33615703
-## gender_recode2Transgender                -53.4858376  7.66727783
-## gender_recode2Woman                      -16.6096171 -1.39473327
-## income_recode100_200                     -20.8935319 20.80595787
-## income_recode20_49 999                    -9.5310700 33.81118963
-## income_recode200+                        -27.8086666 66.03640408
-## income_recode50_99 999                   -20.6921322 19.79557550
-## income_recodeDon't know/prefer no answer -19.6851974 28.95088149
-## age_recode30_39                           -4.1950750 19.67659172
-## age_recode40_49                           -3.5560175 21.76787200
-## age_recode50_64                           -5.4010248 23.16658906
-## age_recode65+                            -15.3882653 14.71964474
-## sum_exp_70:factor(wave_id)2               -0.1609702 -0.15419636
-```
-
-```r
+#confint.merMod(lmer_abs_exp70_ln_cov)
 broom.mixed::glance(lmer_abs_exp70_ln_cov)
 ```
 
@@ -910,6 +878,74 @@ broom.mixed::glance(lmer_abs_exp70_ln_cov)
 ##   sigma    logLik      AIC      BIC REMLcrit df.residual
 ##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
 ## 1  23.5 -3226727. 6453496. 6453736. 6453454.      704824
+```
+
+```r
+### Absolute Model Continuous - with offset
+lmer_abs_exp70_ln_cov_off <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
+summary(lmer_abs_exp70_ln_cov_off)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
+##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
+##     (1 | date_time) + (1 | interact_id)
+##    Data: data_exposure
+##  Offset: minutes
+## 
+## REML criterion at convergence: 8905394
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.5960 -0.6736 -0.1465  0.5165  5.5502 
+## 
+## Random effects:
+##  Groups      Name        Variance Std.Dev.
+##  date_time   (Intercept) 17904    133.8   
+##  interact_id (Intercept) 25085    158.4   
+##  Residual                17904    133.8   
+## Number of obs: 704845, groups:  date_time, 225; interact_id, 134
+## 
+## Fixed effects:
+##                                            Estimate Std. Error t value
+## (Intercept)                              -3.060e+02  8.876e+01  -3.447
+## sum_exp_70                               -3.466e-01  7.382e-03 -46.951
+## factor(wave_id)2                          4.904e+01  2.355e+01   2.082
+## mean_temp_c                              -6.203e+00  2.224e+00  -2.789
+## total_precip_mm                           2.564e-01  1.889e+00   0.136
+## speed_gust_km_h                           2.730e-01  1.008e+00   0.271
+## gender_recode2Transgender                -1.235e+02  1.155e+02  -1.069
+## gender_recode2Woman                       1.037e+01  2.874e+01   0.361
+## income_recode100_200                     -3.708e+00  7.876e+01  -0.047
+## income_recode20_49 999                   -4.539e+01  8.186e+01  -0.554
+## income_recode200+                        -1.682e+02  1.772e+02  -0.949
+## income_recode50_99 999                   -1.460e+00  7.647e+01  -0.019
+## income_recodeDon't know/prefer no answer -1.709e+01  9.186e+01  -0.186
+## age_recode30_39                          -6.430e+01  4.509e+01  -1.426
+## age_recode40_49                          -9.346e+01  4.783e+01  -1.954
+## age_recode50_64                          -1.550e+02  5.396e+01  -2.873
+## age_recode65+                            -1.219e+02  5.686e+01  -2.144
+## sum_exp_70:factor(wave_id)2               3.980e-01  9.840e-03  40.449
+```
+
+```
+## 
+## Correlation matrix not shown by default, as p = 18 > 12.
+## Use print(x, correlation=TRUE)  or
+##     vcov(x)        if you need it
+```
+
+```r
+#confint.merMod(lmer_abs_exp70_ln_cov)
+broom.mixed::glance(lmer_abs_exp70_ln_cov_off)
+```
+
+```
+## # A tibble: 1 x 6
+##   sigma    logLik      AIC      BIC REMLcrit df.residual
+##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
+## 1  134. -4452697. 8905436. 8905677. 8905394.      704824
 ```
 
 ```r
@@ -975,45 +1011,7 @@ summary(lmer_abs_exp70_q_cov)
 ```
 
 ```r
-confint.merMod(lmer_abs_exp70_q_cov)
-```
-
-```
-## Computing profile confidence intervals ...
-```
-
-```
-##                                                2.5 %      97.5 %
-## .sig01                                    16.2982024 19.63600425
-## .sig02                                    18.5325585 23.56125860
-## .sigma                                    23.6208880 23.69902771
-## (Intercept)                                9.1764815 55.27522732
-## sum_exp_70_quint2                         -0.1805335  0.20092863
-## sum_exp_70_quint3                         -0.1724940  0.20918468
-## sum_exp_70_quint4                         -0.1618874  0.21998575
-## sum_exp_70_quint5                         -0.1549347  0.22718031
-## factor(wave_id)2                          -7.8930501  4.49198426
-## mean_temp_c                               -1.0898149  0.07981194
-## total_precip_mm                           -0.5134590  0.47827995
-## speed_gust_km_h                           -0.2166370  0.31239306
-## gender_recode2Transgender                -52.0279305  7.85787497
-## gender_recode2Woman                      -15.8427190 -0.94302797
-## income_recode100_200                     -20.8981073 19.93722178
-## income_recode20_49 999                    -8.3477650 34.09621997
-## income_recode200+                        -28.9056084 62.99482935
-## income_recode50_99 999                   -19.5621633 20.08643214
-## income_recodeDon't know/prefer no answer -19.5501894 28.07799905
-## age_recode30_39                           -3.5045066 19.87259592
-## age_recode40_49                           -2.6021257 22.19681766
-## age_recode50_64                           -5.2302731 22.74536290
-## age_recode65+                            -15.3479650 14.13618736
-## sum_exp_70_quint2:factor(wave_id)2        -0.4673875  0.47409212
-## sum_exp_70_quint3:factor(wave_id)2        -0.4633727  0.47873093
-## sum_exp_70_quint4:factor(wave_id)2        -0.4748220  0.46774496
-## sum_exp_70_quint5:factor(wave_id)2        -0.4731205  0.46990447
-```
-
-```r
+#confint.merMod(lmer_abs_exp70_q_cov)
 broom.mixed::glance(lmer_abs_exp70_q_cov)
 ```
 
@@ -1022,6 +1020,81 @@ broom.mixed::glance(lmer_abs_exp70_q_cov)
 ##   sigma    logLik      AIC      BIC REMLcrit df.residual
 ##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
 ## 1  23.7 -3231409. 6462871. 6463181. 6462817.      704818
+```
+
+```r
+### Absolute Model Quintiles - with offset
+lmer_abs_exp70_q_cov_off <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
+summary(lmer_abs_exp70_q_cov_off)
+```
+
+```
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: 
+## mvpa ~ sum_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
+##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
+##     (1 | date_time) + (1 | interact_id)
+##    Data: data_exposure
+##  Offset: minutes
+## 
+## REML criterion at convergence: 8907655
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.5642 -0.6740 -0.1554  0.5125  5.5906 
+## 
+## Random effects:
+##  Groups      Name        Variance Std.Dev.
+##  date_time   (Intercept) 17863    133.7   
+##  interact_id (Intercept) 25352    159.2   
+##  Residual                17963    134.0   
+## Number of obs: 704845, groups:  date_time, 225; interact_id, 134
+## 
+## Fixed effects:
+##                                            Estimate Std. Error t value
+## (Intercept)                              -304.80159   89.05816  -3.423
+## sum_exp_70_quint2                          -0.18394    0.55125  -0.334
+## sum_exp_70_quint3                          -0.32689    0.55156  -0.593
+## sum_exp_70_quint4                          -0.46742    0.55184  -0.847
+## sum_exp_70_quint5                          -0.65615    0.55219  -1.188
+## factor(wave_id)2                           54.62152   23.53987   2.320
+## mean_temp_c                                -6.47077    2.22104  -2.913
+## total_precip_mm                             0.27176    1.88647   0.144
+## speed_gust_km_h                             0.32390    1.00638   0.322
+## gender_recode2Transgender                -124.97273  116.11688  -1.076
+## gender_recode2Woman                         9.03522   28.88780   0.313
+## income_recode100_200                       -2.87102   79.17859  -0.036
+## income_recode20_49 999                    -47.42349   82.29868  -0.576
+## income_recode200+                        -162.03697  178.18962  -0.909
+## income_recode50_99 999                     -4.20599   76.87802  -0.055
+## income_recodeDon't know/prefer no answer  -15.50156   92.34937  -0.168
+## age_recode30_39                           -66.32408   45.32439  -1.463
+## age_recode40_49                           -97.05744   48.08267  -2.019
+## age_recode50_64                          -155.22142   54.24308  -2.862
+## age_recode65+                            -121.23098   57.16615  -2.121
+## sum_exp_70_quint2:factor(wave_id)2          0.03915    1.36052   0.029
+## sum_exp_70_quint3:factor(wave_id)2          0.04233    1.36142   0.031
+## sum_exp_70_quint4:factor(wave_id)2          0.12773    1.36209   0.094
+## sum_exp_70_quint5:factor(wave_id)2          0.10699    1.36275   0.079
+```
+
+```
+## 
+## Correlation matrix not shown by default, as p = 24 > 12.
+## Use print(x, correlation=TRUE)  or
+##     vcov(x)        if you need it
+```
+
+```r
+#confint.merMod(lmer_abs_exp70_q_cov)
+broom.mixed::glance(lmer_abs_exp70_q_cov_off)
+```
+
+```
+## # A tibble: 1 x 6
+##   sigma    logLik      AIC      BIC REMLcrit df.residual
+##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
+## 1  134. -4453827. 8907709. 8908019. 8907655.      704818
 ```
 
 ## Relative Exposure
@@ -1188,39 +1261,66 @@ summary(lmer_rel_exp_ln_cov)
 ```
 
 ```r
-confint.merMod(lmer_rel_exp_ln_cov)
+#confint.merMod(lmer_rel_exp_ln_cov)
+
+### Linear exposure - with offset
+lmer_rel_exp_ln_cov_off <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
+summary(lmer_rel_exp_ln_cov_off)
 ```
 
 ```
-## Computing profile confidence intervals ...
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: mvpa ~ rel_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
+##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
+##     (1 | date_time) + (1 | interact_id)
+##    Data: data_exposure
+##  Offset: minutes
+## 
+## REML criterion at convergence: 8726810
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7082 -0.6605 -0.1588  0.5108  5.6359 
+## 
+## Random effects:
+##  Groups      Name        Variance Std.Dev.
+##  date_time   (Intercept) 17585    132.6   
+##  interact_id (Intercept) 25949    161.1   
+##  Residual                17856    133.6   
+## Number of obs: 690856, groups:  date_time, 222; interact_id, 134
+## 
+## Fixed effects:
+##                                            Estimate Std. Error t value
+## (Intercept)                              -299.24505   89.63809  -3.338
+## rel_exp_70                                  1.83087    0.04850  37.749
+## factor(wave_id)2                           51.75747   23.81151   2.174
+## mean_temp_c                                -7.21377    2.21232  -3.261
+## total_precip_mm                             0.48507    1.87519   0.259
+## speed_gust_km_h                             0.45357    1.00441   0.452
+## gender_recode2Transgender                -125.86232  117.47541  -1.071
+## gender_recode2Woman                        -2.19497   29.22673  -0.075
+## income_recode100_200                      -14.51121   80.10480  -0.181
+## income_recode20_49 999                    -49.21078   83.26107  -0.591
+## income_recode200+                        -153.09298  180.27327  -0.849
+## income_recode50_99 999                     -6.29076   77.77731  -0.081
+## income_recodeDon't know/prefer no answer  -15.42058   93.42931  -0.165
+## age_recode30_39                           -60.17935   45.85476  -1.312
+## age_recode40_49                           -77.29209   48.64822  -1.589
+## age_recode50_64                          -142.01230   54.87780  -2.588
+## age_recode65+                            -116.59198   57.83485  -2.016
+## rel_exp_70:factor(wave_id)2                 3.49363    0.09443  36.996
 ```
 
 ```
-##                                                2.5 %      97.5 %
-## .sig01                                    16.4794550 19.88147277
-## .sig02                                    19.3659361 24.62237797
-## .sigma                                    23.5805996 23.65939243
-## (Intercept)                                8.5461739 56.28012150
-## rel_exp_70                                 0.4440526  0.47765378
-## factor(wave_id)2                          -5.3210336  7.44910220
-## mean_temp_c                               -1.2512946 -0.06323048
-## total_precip_mm                           -0.4782010  0.52712016
-## speed_gust_km_h                           -0.1714781  0.36697421
-## gender_recode2Transgender                -55.0275917  7.55321907
-## gender_recode2Woman                      -17.7712778 -2.20038727
-## income_recode100_200                     -22.3032320 20.36965044
-## income_recode20_49 999                    -9.4178900 34.93584217
-## income_recode200+                        -28.3885309 67.64647157
-## income_recode50_99 999                   -20.9935972 20.43918176
-## income_recodeDon't know/prefer no answer -20.6708576 29.10023521
-## age_recode30_39                           -4.1442481 20.28472701
-## age_recode40_49                           -1.8563620 24.06111337
-## age_recode50_64                           -4.8610999 24.37352819
-## age_recode65+                            -15.9549512 14.85573467
-## rel_exp_70:factor(wave_id)2               -0.3855688 -0.32014903
+## 
+## Correlation matrix not shown by default, as p = 18 > 12.
+## Use print(x, correlation=TRUE)  or
+##     vcov(x)        if you need it
 ```
 
 ```r
+#confint.merMod(lmer_rel_exp_ln_cov_off)
+
 ### Quintiles of exposure
 lmer_rel_exp_q_cov <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_q_cov)
@@ -1283,42 +1383,72 @@ summary(lmer_rel_exp_q_cov)
 ```
 
 ```r
-confint.merMod(lmer_rel_exp_q_cov)
+#confint.merMod(lmer_rel_exp_q_cov)
+
+### Quintiles of exposure - with offset
+lmer_rel_exp_q_cov_off <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
+summary(lmer_rel_exp_q_cov_off)
 ```
 
 ```
-## Computing profile confidence intervals ...
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: 
+## mvpa ~ rel_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
+##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
+##     (1 | date_time) + (1 | interact_id)
+##    Data: data_exposure
+##  Offset: minutes
+## 
+## REML criterion at convergence: 8732013
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.5322 -0.6674 -0.1572  0.5068  5.6280 
+## 
+## Random effects:
+##  Groups      Name        Variance Std.Dev.
+##  date_time   (Intercept) 18500    136.0   
+##  interact_id (Intercept) 26705    163.4   
+##  Residual                17992    134.1   
+## Number of obs: 690856, groups:  date_time, 222; interact_id, 134
+## 
+## Fixed effects:
+##                                            Estimate Std. Error t value
+## (Intercept)                              -290.50767   91.23710  -3.184
+## rel_exp_70_quint2                          -0.18360    0.55490  -0.331
+## rel_exp_70_quint3                          -0.32308    0.55521  -0.582
+## rel_exp_70_quint4                          -0.46034    0.55550  -0.829
+## rel_exp_70_quint5                          -0.65123    0.55585  -1.172
+## factor(wave_id)2                           65.08697   24.43591   2.664
+## mean_temp_c                                -7.32679    2.26880  -3.229
+## total_precip_mm                             0.41259    1.92329   0.215
+## speed_gust_km_h                             0.48532    1.03018   0.471
+## gender_recode2Transgender                -137.00331  119.17474  -1.150
+## gender_recode2Woman                        -2.58304   29.64930  -0.087
+## income_recode100_200                      -10.79640   81.26367  -0.133
+## income_recode20_49 999                    -47.03479   84.46565  -0.557
+## income_recode200+                        -157.41209  182.88112  -0.861
+## income_recode50_99 999                     -2.08202   78.90252  -0.026
+## income_recodeDon't know/prefer no answer  -20.08024   94.78094  -0.212
+## age_recode30_39                           -63.95213   46.51801  -1.375
+## age_recode40_49                           -80.09470   49.35189  -1.623
+## age_recode50_64                          -148.25622   55.67162  -2.663
+## age_recode65+                            -125.84064   58.67132  -2.145
+## rel_exp_70_quint2:factor(wave_id)2          0.02795    1.40013   0.020
+## rel_exp_70_quint3:factor(wave_id)2          0.02526    1.40104   0.018
+## rel_exp_70_quint4:factor(wave_id)2          0.10805    1.40174   0.077
+## rel_exp_70_quint5:factor(wave_id)2          0.07655    1.40243   0.055
 ```
 
 ```
-##                                                2.5 %       97.5 %
-## .sig01                                    16.2746855 19.634392291
-## .sig02                                    19.4002241 24.665394608
-## .sigma                                    23.6303290 23.709288577
-## (Intercept)                                8.2399757 55.856063917
-## rel_exp_70_quint2                         -0.1815660  0.202274862
-## rel_exp_70_quint3                         -0.1740805  0.209977425
-## rel_exp_70_quint4                         -0.1637356  0.220517843
-## rel_exp_70_quint5                         -0.1568650  0.227629605
-## factor(wave_id)2                          -6.0493922  6.575726318
-## mean_temp_c                               -1.1657332  0.007720805
-## total_precip_mm                           -0.4916779  0.501180040
-## speed_gust_km_h                           -0.1733959  0.358378790
-## gender_recode2Transgender                -54.7074843  7.983076183
-## gender_recode2Woman                      -17.0369972 -1.438907949
-## income_recode100_200                     -21.9002625 20.847565547
-## income_recode20_49 999                    -9.3205420 35.111104534
-## income_recode200+                        -30.4638735 65.739710612
-## income_recode50_99 999                   -20.6142756 20.891265807
-## income_recodeDon't know/prefer no answer -21.0314171 28.827088544
-## age_recode30_39                           -4.1226921 20.349155453
-## age_recode40_49                           -2.2781273 23.684862854
-## age_recode50_64                           -5.7035058 23.582404537
-## age_recode65+                            -16.3713867 14.493289161
-## rel_exp_70_quint2:factor(wave_id)2        -0.4792648  0.489243169
-## rel_exp_70_quint3:factor(wave_id)2        -0.4721458  0.496994359
-## rel_exp_70_quint4:factor(wave_id)2        -0.4829200  0.486704125
-## rel_exp_70_quint5:factor(wave_id)2        -0.4798218  0.490277165
+## 
+## Correlation matrix not shown by default, as p = 24 > 12.
+## Use print(x, correlation=TRUE)  or
+##     vcov(x)        if you need it
+```
+
+```r
+#confint.merMod(lmer_rel_exp_q_cov_off)
 ```
 
 # Sensitivity Analysis for different buffers
