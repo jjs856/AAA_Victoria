@@ -23,6 +23,7 @@ library(DRDID)
 library(did)
 library(modelsummary)
 library(broom.mixed)
+library(INLA)
 ```
 
 
@@ -169,8 +170,16 @@ data_exposure$rel_exp_100_quint <- as.factor(data_exposure$rel_exp_100_quint)
 
 table(data_exposure$rel_exp_70_quint)
 table(data_exposure$rel_exp_100_quint)
-
 ```
+
+### Creating a days variable 
+```{r}
+data_exposure <- data_exposure[order(data_exposure$date, data_exposure$interact_id), ]
+
+data_exposure$time_seq <- as.numeric(data_exposure$date_time)
+```
+
+
 
 ```{r}
 rel_exposure_histo <- ggplot(data_exposure, aes(rel_exp_70)) + 
@@ -233,50 +242,65 @@ MLM models with person level random intercepts using the lmer package
 
 ### Absolute exposure with a 70 meter buffer and no covariates
 
-```{r}
+```{r null_model}
 ### Null Model
 lmer_null_exp70_ln <- lmer(mvpa ~ 1 + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_null_exp70_ln)
 broom.mixed::glance(lmer_null_exp70_ln)
 ```
 
-```{r}
-### Absolute Model Continuous
-lmer_abs_exp70_ln <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
-summary(lmer_abs_exp70_ln)
-broom.mixed::glance(lmer_abs_exp70_ln)
-
-### Absolute Model Quintiles
-lmer_abs_exp70_q <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
-summary(lmer_abs_exp70_q)
-broom.mixed::glance(lmer_abs_exp70_q)
-```
-
 ### Absolute exposure with a 70 meter buffer and covariates - Random intercepts
-```{r}
+```{r absolute_r_interept_70m}
 ### Absolute Model Continuous
 lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_ln_cov)
-#confint.merMod(lmer_abs_exp70_ln_cov)
+confint.merMod(lmer_abs_exp70_ln_cov)
 broom.mixed::glance(lmer_abs_exp70_ln_cov)
 
 ### Absolute Model Continuous - with offset
 lmer_abs_exp70_ln_cov_off <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_abs_exp70_ln_cov_off)
-#confint.merMod(lmer_abs_exp70_ln_cov)
+confint.merMod(lmer_abs_exp70_ln_cov)
 broom.mixed::glance(lmer_abs_exp70_ln_cov_off)
 
 ### Absolute Model Quintiles
 lmer_abs_exp70_q_cov <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_q_cov)
-#confint.merMod(lmer_abs_exp70_q_cov)
+confint.merMod(lmer_abs_exp70_q_cov)
 broom.mixed::glance(lmer_abs_exp70_q_cov)
 
 ### Absolute Model Quintiles - with offset
 lmer_abs_exp70_q_cov_off <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_abs_exp70_q_cov_off)
-#confint.merMod(lmer_abs_exp70_q_cov)
+confint.merMod(lmer_abs_exp70_q_cov)
 broom.mixed::glance(lmer_abs_exp70_q_cov_off)
+```
+
+### Absolute exposure with a 70 meter buffer and covariates - Random slopes
+```{r absolute_r_slopes_70m}
+### Absolute Model Continuous
+lmer_abs_exp70_ln_cov_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_abs_exp70_ln_cov_rs)
+confint.merMod(lmer_abs_exp70_ln_cov_rs)
+broom.mixed::glance(lmer_abs_exp70_ln_cov_rs)
+
+### Absolute Model Continuous - with offset
+lmer_abs_exp70_ln_cov_off_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_abs_exp70_ln_cov_off_rs)
+confint.merMod(lmer_abs_exp70_ln_cov_off_rs)
+broom.mixed::glance(lmer_abs_exp70_ln_cov_off_rs)
+
+### Absolute Model Quintiles
+lmer_abs_exp70_q_cov_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_abs_exp70_q_cov_rs)
+confint.merMod(lmer_abs_exp70_q_cov_rs)
+broom.mixed::glance(lmer_abs_exp70_q_cov_rs)
+
+### Absolute Model Quintiles - with offset
+lmer_abs_exp70_q_cov_off_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_abs_exp70_q_cov_off_rs)
+confint.merMod(lmer_abs_exp70_q_cov_off_rs)
+broom.mixed::glance(lmer_abs_exp70_q_cov_off_rs)
 ```
 
 ## Relative Exposure
@@ -293,28 +317,52 @@ lmer_rel_exp_q <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + (1 | date_time)
 summary(lmer_rel_exp_q)
 ```
 
-### Relative exposure with a 70 meter buffer and covariates
+### Relative exposure with a 70 meter buffer and covariates - Random intercepts
 
-```{r}
+```{r relative_r_interept_70m}
 ### Linear exposure
 lmer_rel_exp_ln_cov <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_ln_cov)
-#confint.merMod(lmer_rel_exp_ln_cov)
+confint.merMod(lmer_rel_exp_ln_cov)
 
 ### Linear exposure - with offset
 lmer_rel_exp_ln_cov_off <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_rel_exp_ln_cov_off)
-#confint.merMod(lmer_rel_exp_ln_cov_off)
+confint.merMod(lmer_rel_exp_ln_cov_off)
 
 ### Quintiles of exposure
 lmer_rel_exp_q_cov <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_q_cov)
-#confint.merMod(lmer_rel_exp_q_cov)
+confint.merMod(lmer_rel_exp_q_cov)
 
 ### Quintiles of exposure - with offset
 lmer_rel_exp_q_cov_off <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_rel_exp_q_cov_off)
-#confint.merMod(lmer_rel_exp_q_cov_off)
+confint.merMod(lmer_rel_exp_q_cov_off)
+```
+
+### Relative exposure with a 70 meter buffer and covariates - Random Slopes
+
+```{r relative_r_slopes_70m}
+### Linear exposure
+lmer_rel_exp_ln_cov_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_rel_exp_ln_cov_rs)
+confint.merMod(lmer_rel_exp_ln_cov_rs)
+
+### Linear exposure - with offset
+lmer_rel_exp_ln_cov_off_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_rel_exp_ln_cov_off_rs)
+confint.merMod(lmer_rel_exp_ln_cov_off_rs)
+
+### Quintiles of exposure
+lmer_rel_exp_q_cov_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_rel_exp_q_cov_rs)
+confint.merMod(lmer_rel_exp_q_cov_rs)
+
+### Quintiles of exposure - with offset
+lmer_rel_exp_q_cov_off_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+summary(lmer_rel_exp_q_cov_off_rs)
+confint.merMod(lmer_rel_exp_q_cov_off_rs)
 ```
 
 # Sensitivity Analysis for different buffers
