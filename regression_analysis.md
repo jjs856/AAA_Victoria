@@ -26,18 +26,18 @@ library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──
 ```
 
 ```
-## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
-## ✓ tibble  3.0.3     ✓ dplyr   1.0.2
-## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
-## ✓ readr   1.3.1     ✓ forcats 0.5.0
+## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.1.2     ✓ dplyr   1.0.6
+## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.1
 ```
 
 ```
-## ── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## x tidyr::expand() masks Matrix::expand()
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()
@@ -78,50 +78,18 @@ library(did)
 ```r
 library(modelsummary)
 library(broom.mixed)
-```
-
-```
-## Registered S3 method overwritten by 'broom.mixed':
-##   method      from 
-##   tidy.gamlss broom
-```
-
-```r
-library(INLA)
-```
-
-```
-## Warning: package 'INLA' was built under R version 4.0.4
-```
-
-```
-## Loading required package: foreach
+library(rstatix)
 ```
 
 ```
 ## 
-## Attaching package: 'foreach'
+## Attaching package: 'rstatix'
 ```
 
 ```
-## The following objects are masked from 'package:purrr':
+## The following object is masked from 'package:stats':
 ## 
-##     accumulate, when
-```
-
-```
-## Loading required package: parallel
-```
-
-```
-## Loading required package: sp
-```
-
-```
-## This is INLA_21.02.23 built 2021-02-22 21:16:12 UTC.
-##  - See www.r-inla.org/contact-us for how to get help.
-##  - To enable PARDISO sparse library; see inla.pardiso()
-##  - Save 350.5Mb of storage running 'inla.prune()'
+##     filter
 ```
 
 
@@ -140,7 +108,8 @@ data <- read_csv("/Users/dfuller/Documents/INTERACT/data/sensors/sd_data_exposur
 ```
 
 ```
-## Parsed with column specification:
+## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   .default = col_double(),
 ##   utcdate = col_datetime(format = ""),
@@ -152,10 +121,7 @@ data <- read_csv("/Users/dfuller/Documents/INTERACT/data/sensors/sd_data_exposur
 ##   city_id = col_character(),
 ##   date = col_date(format = "")
 ## )
-```
-
-```
-## See spec(...) for full column specifications.
+## ℹ Use `spec()` for the full column specifications.
 ```
 
 ```
@@ -180,7 +146,8 @@ health_data <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_clean.csv
 ```
 
 ```
-## Parsed with column specification:
+## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   .default = col_double(),
 ##   city_id = col_character(),
@@ -205,10 +172,7 @@ health_data <- read_csv("/Users/dfuller/Documents/INTERACT/data/health_clean.csv
 ##   employment_txt = col_character()
 ##   # ... with 204 more columns
 ## )
-```
-
-```
-## See spec(...) for full column specifications.
+## ℹ Use `spec()` for the full column specifications.
 ```
 
 ```
@@ -239,7 +203,8 @@ weather_data <- read_csv("/Users/dfuller/Documents/INTERACT/data/weather/2016_20
 ```
 
 ```
-## Parsed with column specification:
+## 
+## ── Column specification ────────────────────────────────────────────────────────
 ## cols(
 ##   .default = col_character(),
 ##   lon = col_double(),
@@ -260,10 +225,7 @@ weather_data <- read_csv("/Users/dfuller/Documents/INTERACT/data/weather/2016_20
 ##   snow_ground_flag = col_logical(),
 ##   dir_gust_10s_deg = col_double()
 ## )
-```
-
-```
-## See spec(...) for full column specifications.
+## ℹ Use `spec()` for the full column specifications.
 ```
 
 ```
@@ -340,7 +302,7 @@ data_exposure <- data %>%
 ```
 
 ```
-## `summarise()` regrouping output by 'interact_id', 'wave_id', 'date' (override with `.groups` argument)
+## `summarise()` has grouped output by 'interact_id', 'wave_id', 'date'. You can override using the `.groups` argument.
 ```
 
 ```r
@@ -367,7 +329,7 @@ summary(data_exposure$sum_exp_70)
 
 ```r
 ### Removing participants with more than 500 minutes of exposure
-data_exposure$sum_exp_70 <- if_else(data_exposure$sum_exp_70 > 500, NA_real_, data_exposure$sum_exp_70)
+data_exposure$sum_exp_70 <- if_else(data_exposure$sum_exp_70 > 500, NA_real_, data_exposure$sum_exp_70) #1264068
 data_exposure$sum_exp_50 <- if_else(data_exposure$sum_exp_50 > 500, NA_real_, data_exposure$sum_exp_50)
 data_exposure$sum_exp_100 <- if_else(data_exposure$sum_exp_100 > 500, NA_real_, data_exposure$sum_exp_100)
 
@@ -399,6 +361,33 @@ table(data_exposure$sum_exp_100_quint)
 ## 
 ##      1      2      3      4      5 
 ## 252227 251638 251075 250579 249961
+```
+
+```r
+summary(data_exposure$sum_exp_70)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    2.00   21.72   13.00  497.00    6029
+```
+
+```r
+summary(data_exposure$sum_exp_50)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    2.00   19.33   10.00  494.00     664
+```
+
+```r
+summary(data_exposure$sum_exp_100)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    3.00   25.94   18.00  495.00    8588
 ```
 
 
@@ -468,6 +457,33 @@ table(data_exposure$rel_exp_100_quint)
 ## 244839 244273 243726 243248 242649
 ```
 
+```r
+summary(data_exposure$rel_exp_70)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    0.35    2.53    2.05   38.65   39594
+```
+
+```r
+summary(data_exposure$rel_exp_50)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##   0.000   0.000   0.271   2.250   1.689  39.041   29598
+```
+
+```r
+summary(data_exposure$rel_exp_100)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    0.00    0.00    0.53    3.25    2.87   40.00   45333
+```
+
 ### Creating a days variable 
 
 ```r
@@ -475,7 +491,6 @@ data_exposure <- data_exposure[order(data_exposure$date, data_exposure$interact_
 
 data_exposure$time_seq <- as.numeric(data_exposure$date_time)
 ```
-
 
 
 
@@ -500,6 +515,38 @@ plot(rel_exposure_histo)
 
 ### Histograms of Moderate to vigorous PA 
 
+
+```r
+summary(data_exposure$mvpa)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    0.00   11.00   26.00   36.12   51.00  267.00
+```
+
+```r
+sd(data_exposure$mvpa)
+```
+
+```
+## [1] 35.15078
+```
+
+```r
+waves_pa <- data_exposure %>%
+              group_by(wave_id) %>%
+                get_summary_stats(mvpa, type = "mean_sd")
+waves_pa
+```
+
+```
+## # A tibble: 2 x 5
+##   wave_id variable      n  mean    sd
+##     <dbl> <chr>     <dbl> <dbl> <dbl>
+## 1       1 mvpa     708729  35.1  35.2
+## 2       2 mvpa     555339  37.4  35.0
+```
 
 ```r
 pa_histo <- ggplot(data_exposure, aes(mvpa)) + 
@@ -794,7 +841,39 @@ summary(lmer_abs_exp70_ln_cov)
 ```
 
 ```r
-#confint.merMod(lmer_abs_exp70_ln_cov)
+confint.merMod(lmer_abs_exp70_ln_cov)
+```
+
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    16.3586099 19.70978672
+## .sig02                                    18.9250478 24.06003184
+## .sigma                                    23.4642380 23.54185914
+## (Intercept)                                8.0899947 54.91238649
+## sum_exp_70                                 0.1128907  0.11797280
+## factor(wave_id)2                          -5.2762227  7.14130614
+## mean_temp_c                               -1.1309338  0.04299357
+## total_precip_mm                           -0.5108664  0.48455512
+## speed_gust_km_h                           -0.1948404  0.33615706
+## gender_recode2Transgender                -53.4858433  7.66727836
+## gender_recode2Woman                      -16.6096169 -1.39473351
+## income_recode100_200                     -20.8935318 20.80595917
+## income_recode20_49 999                    -9.5310693 33.81118953
+## income_recode200+                        -27.8086705 66.03640748
+## income_recode50_99 999                   -20.6921333 19.79557306
+## income_recodeDon't know/prefer no answer -19.6851952 28.95088118
+## age_recode30_39                           -4.1950741 19.67659189
+## age_recode40_49                           -3.5560170 21.76787258
+## age_recode50_64                           -5.4010251 23.16659050
+## age_recode65+                            -15.3882638 14.71964410
+## sum_exp_70:factor(wave_id)2               -0.1609702 -0.15419636
+```
+
+```r
 broom.mixed::glance(lmer_abs_exp70_ln_cov)
 ```
 
@@ -862,7 +941,39 @@ summary(lmer_abs_exp70_ln_cov_off)
 ```
 
 ```r
-#confint.merMod(lmer_abs_exp70_ln_cov)
+confint.merMod(lmer_abs_exp70_ln_cov)
+```
+
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    16.3586099 19.70978672
+## .sig02                                    18.9250478 24.06003184
+## .sigma                                    23.4642380 23.54185914
+## (Intercept)                                8.0899947 54.91238649
+## sum_exp_70                                 0.1128907  0.11797280
+## factor(wave_id)2                          -5.2762227  7.14130614
+## mean_temp_c                               -1.1309338  0.04299357
+## total_precip_mm                           -0.5108664  0.48455512
+## speed_gust_km_h                           -0.1948404  0.33615706
+## gender_recode2Transgender                -53.4858433  7.66727836
+## gender_recode2Woman                      -16.6096169 -1.39473351
+## income_recode100_200                     -20.8935318 20.80595917
+## income_recode20_49 999                    -9.5310693 33.81118953
+## income_recode200+                        -27.8086705 66.03640748
+## income_recode50_99 999                   -20.6921333 19.79557306
+## income_recodeDon't know/prefer no answer -19.6851952 28.95088118
+## age_recode30_39                           -4.1950741 19.67659189
+## age_recode40_49                           -3.5560170 21.76787258
+## age_recode50_64                           -5.4010251 23.16659050
+## age_recode65+                            -15.3882638 14.71964410
+## sum_exp_70:factor(wave_id)2               -0.1609702 -0.15419636
+```
+
+```r
 broom.mixed::glance(lmer_abs_exp70_ln_cov_off)
 ```
 
@@ -936,7 +1047,45 @@ summary(lmer_abs_exp70_q_cov)
 ```
 
 ```r
-#confint.merMod(lmer_abs_exp70_q_cov)
+confint.merMod(lmer_abs_exp70_q_cov)
+```
+
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    16.2982110 19.63599613
+## .sig02                                    18.5325473 23.56128124
+## .sigma                                    23.6208880 23.69902764
+## (Intercept)                                9.1764820 55.27522595
+## sum_exp_70_quint2                         -0.1805335  0.20092864
+## sum_exp_70_quint3                         -0.1724940  0.20918466
+## sum_exp_70_quint4                         -0.1618875  0.21998575
+## sum_exp_70_quint5                         -0.1549347  0.22718030
+## factor(wave_id)2                          -7.8930500  4.49198405
+## mean_temp_c                               -1.0898150  0.07981193
+## total_precip_mm                           -0.5134589  0.47827994
+## speed_gust_km_h                           -0.2166370  0.31239307
+## gender_recode2Transgender                -52.0279311  7.85787360
+## gender_recode2Woman                      -15.8427135 -0.94302790
+## income_recode100_200                     -20.8981083 19.93722127
+## income_recode20_49 999                    -8.3477792 34.09622029
+## income_recode200+                        -28.9056113 62.99482910
+## income_recode50_99 999                   -19.5621631 20.08642941
+## income_recodeDon't know/prefer no answer -19.5501893 28.07799696
+## age_recode30_39                           -3.5045067 19.87259627
+## age_recode40_49                           -2.6021247 22.19681802
+## age_recode50_64                           -5.2302741 22.74536289
+## age_recode65+                            -15.3479559 14.13618689
+## sum_exp_70_quint2:factor(wave_id)2        -0.4673875  0.47409214
+## sum_exp_70_quint3:factor(wave_id)2        -0.4633727  0.47873093
+## sum_exp_70_quint4:factor(wave_id)2        -0.4748219  0.46774498
+## sum_exp_70_quint5:factor(wave_id)2        -0.4731205  0.46990448
+```
+
+```r
 broom.mixed::glance(lmer_abs_exp70_q_cov)
 ```
 
@@ -1011,7 +1160,45 @@ summary(lmer_abs_exp70_q_cov_off)
 ```
 
 ```r
-#confint.merMod(lmer_abs_exp70_q_cov)
+confint.merMod(lmer_abs_exp70_q_cov)
+```
+
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    16.2982110 19.63599613
+## .sig02                                    18.5325473 23.56128124
+## .sigma                                    23.6208880 23.69902764
+## (Intercept)                                9.1764820 55.27522595
+## sum_exp_70_quint2                         -0.1805335  0.20092864
+## sum_exp_70_quint3                         -0.1724940  0.20918466
+## sum_exp_70_quint4                         -0.1618875  0.21998575
+## sum_exp_70_quint5                         -0.1549347  0.22718030
+## factor(wave_id)2                          -7.8930500  4.49198405
+## mean_temp_c                               -1.0898150  0.07981193
+## total_precip_mm                           -0.5134589  0.47827994
+## speed_gust_km_h                           -0.2166370  0.31239307
+## gender_recode2Transgender                -52.0279311  7.85787360
+## gender_recode2Woman                      -15.8427135 -0.94302790
+## income_recode100_200                     -20.8981083 19.93722127
+## income_recode20_49 999                    -8.3477792 34.09622029
+## income_recode200+                        -28.9056113 62.99482910
+## income_recode50_99 999                   -19.5621631 20.08642941
+## income_recodeDon't know/prefer no answer -19.5501893 28.07799696
+## age_recode30_39                           -3.5045067 19.87259627
+## age_recode40_49                           -2.6021247 22.19681802
+## age_recode50_64                           -5.2302741 22.74536289
+## age_recode65+                            -15.3479559 14.13618689
+## sum_exp_70_quint2:factor(wave_id)2        -0.4673875  0.47409214
+## sum_exp_70_quint3:factor(wave_id)2        -0.4633727  0.47873093
+## sum_exp_70_quint4:factor(wave_id)2        -0.4748219  0.46774498
+## sum_exp_70_quint5:factor(wave_id)2        -0.4731205  0.46990448
+```
+
+```r
 broom.mixed::glance(lmer_abs_exp70_q_cov_off)
 ```
 
@@ -1026,422 +1213,29 @@ broom.mixed::glance(lmer_abs_exp70_q_cov_off)
 
 ```r
 ### Absolute Model Continuous
-lmer_abs_exp70_ln_cov_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-```
+#lmer_abs_exp70_ln_cov_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
 
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## unable to evaluate scaled gradient
-```
-
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
-```
-
-```r
-summary(lmer_abs_exp70_ln_cov_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6499533
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.4188 -0.5271 -0.0793  0.4206  5.7921 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 590445.20 768.40        
-##                time_seq        22.75   4.77   -1.00
-##  interact_id.1 (Intercept)  63229.69 251.46        
-##  Residual                     589.41  24.28        
-## Number of obs: 704845, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                              -95.934962 117.715810  -0.815
-## sum_exp_70                                 0.070694   0.001426  49.580
-## factor(wave_id)2                           4.419584   1.594614   2.772
-## mean_temp_c                               -0.055381   0.019866  -2.788
-## total_precip_mm                           -0.055008   0.006780  -8.113
-## speed_gust_km_h                           -0.072574   0.003716 -19.532
-## gender_recode2Transgender                -10.069480 184.354745  -0.055
-## gender_recode2Woman                       -4.802933  45.936118  -0.105
-## income_recode100_200                     140.514512 125.807134   1.117
-## income_recode20_49 999                    46.109321 130.763091   0.353
-## income_recode200+                        -90.465995 283.420286  -0.319
-## income_recode50_99 999                   122.295295 122.136929   1.001
-## income_recodeDon't know/prefer no answer 182.661117 146.727944   1.245
-## age_recode30_39                            9.531184  72.090423   0.132
-## age_recode40_49                           -8.690059  76.460024  -0.114
-## age_recode50_64                           50.064009  86.230815   0.581
-## age_recode65+                             77.216840  90.821204   0.850
-## sum_exp_70:factor(wave_id)2               -0.126998   0.002411 -52.678
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 18 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## unable to evaluate scaled gradient
-## Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
-```
-
-```r
+#summary(lmer_abs_exp70_ln_cov_rs)
 #confint.merMod(lmer_abs_exp70_ln_cov_rs)
-broom.mixed::glance(lmer_abs_exp70_ln_cov_rs)
-```
+#broom.mixed::glance(lmer_abs_exp70_ln_cov_rs)
 
-```
-## # A tibble: 1 x 6
-##   sigma    logLik      AIC      BIC REMLcrit df.residual
-##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
-## 1  24.3 -3249767. 6499579. 6499843. 6499533.      704822
-```
-
-```r
-lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## unable to evaluate scaled gradient
-
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
-```
-
-```r
-summary(lmer_abs_exp70_ln_cov)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6499533
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.4188 -0.5271 -0.0793  0.4206  5.7921 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 590445.20 768.40        
-##                time_seq        22.75   4.77   -1.00
-##  interact_id.1 (Intercept)  63229.69 251.46        
-##  Residual                     589.41  24.28        
-## Number of obs: 704845, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                              -95.934962 117.715810  -0.815
-## sum_exp_70                                 0.070694   0.001426  49.580
-## factor(wave_id)2                           4.419584   1.594614   2.772
-## mean_temp_c                               -0.055381   0.019866  -2.788
-## total_precip_mm                           -0.055008   0.006780  -8.113
-## speed_gust_km_h                           -0.072574   0.003716 -19.532
-## gender_recode2Transgender                -10.069480 184.354745  -0.055
-## gender_recode2Woman                       -4.802933  45.936118  -0.105
-## income_recode100_200                     140.514512 125.807134   1.117
-## income_recode20_49 999                    46.109321 130.763091   0.353
-## income_recode200+                        -90.465995 283.420286  -0.319
-## income_recode50_99 999                   122.295295 122.136929   1.001
-## income_recodeDon't know/prefer no answer 182.661117 146.727944   1.245
-## age_recode30_39                            9.531184  72.090423   0.132
-## age_recode40_49                           -8.690059  76.460024  -0.114
-## age_recode50_64                           50.064009  86.230815   0.581
-## age_recode65+                             77.216840  90.821204   0.850
-## sum_exp_70:factor(wave_id)2               -0.126998   0.002411 -52.678
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 18 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## unable to evaluate scaled gradient
-## Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
-```
-
-```r
 ### Absolute Model Continuous - with offset
-lmer_abs_exp70_ln_cov_off_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
-summary(lmer_abs_exp70_ln_cov_off_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-##  Offset: minutes
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 8938657
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -2.7021 -0.6310 -0.1154  0.4901  7.4917 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 7625094.9 2761.36       
-##                time_seq        719.1   26.82  -1.00
-##  interact_id.1 (Intercept) 2729111.5 1652.00       
-##  Residual                    18763.4  136.98       
-## Number of obs: 704845, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                               1.595e+01  7.688e+02   0.021
-## sum_exp_70                               -2.786e-01  8.046e-03 -34.623
-## factor(wave_id)2                         -4.889e+02  8.998e+00 -54.333
-## mean_temp_c                               2.711e+00  1.121e-01  24.189
-## total_precip_mm                          -2.771e-01  3.825e-02  -7.243
-## speed_gust_km_h                          -5.375e-01  2.096e-02 -25.637
-## gender_recode2Transgender                -2.995e+02  1.205e+03  -0.249
-## gender_recode2Woman                      -5.404e+01  3.007e+02  -0.180
-## income_recode100_200                     -1.041e+02  8.219e+02  -0.127
-## income_recode20_49 999                    2.199e+02  8.540e+02   0.258
-## income_recode200+                        -9.905e+02  1.849e+03  -0.536
-## income_recode50_99 999                   -2.999e+01  7.978e+02  -0.038
-## income_recodeDon't know/prefer no answer  5.666e+02  9.582e+02   0.591
-## age_recode30_39                          -3.195e+02  4.713e+02  -0.678
-## age_recode40_49                          -4.403e+02  4.994e+02  -0.882
-## age_recode50_64                          -5.158e+02  5.631e+02  -0.916
-## age_recode65+                            -6.075e+02  5.933e+02  -1.024
-## sum_exp_70:factor(wave_id)2              -1.645e-01  1.359e-02 -12.104
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 18 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
+#lmer_abs_exp70_ln_cov_off_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_abs_exp70_ln_cov_off_rs)
 #confint.merMod(lmer_abs_exp70_ln_cov_off_rs)
-broom.mixed::glance(lmer_abs_exp70_ln_cov_off_rs)
-```
+#broom.mixed::glance(lmer_abs_exp70_ln_cov_off_rs)
 
-```
-## # A tibble: 1 x 6
-##   sigma    logLik      AIC      BIC REMLcrit df.residual
-##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
-## 1  137. -4469329. 8938703. 8938967. 8938657.      704822
-```
-
-```r
 ### Absolute Model Quintiles
-lmer_abs_exp70_q_cov_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
-summary(lmer_abs_exp70_q_cov_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: 
-## mvpa ~ sum_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6502831
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.3793 -0.5068 -0.0794  0.4186  5.7742 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 775130.38 880.415       
-##                time_seq        28.04   5.295  -1.00
-##  interact_id.1 (Intercept)  65044.90 255.039       
-##  Residual                     592.16  24.334       
-## Number of obs: 704845, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                              -1.016e+02  1.188e+02  -0.855
-## sum_exp_70_quint2                         1.264e-02  1.001e-01   0.126
-## sum_exp_70_quint3                         1.988e-02  1.001e-01   0.199
-## sum_exp_70_quint4                         3.202e-02  1.002e-01   0.320
-## sum_exp_70_quint5                         3.962e-02  1.003e-01   0.395
-## factor(wave_id)2                          1.312e+00  1.596e+00   0.822
-## mean_temp_c                              -2.790e-02  1.990e-02  -1.402
-## total_precip_mm                          -5.779e-02  6.795e-03  -8.505
-## speed_gust_km_h                          -7.364e-02  3.724e-03 -19.774
-## gender_recode2Transgender                -1.125e+01  1.860e+02  -0.060
-## gender_recode2Woman                      -6.254e+00  4.634e+01  -0.135
-## income_recode100_200                      1.429e+02  1.269e+02   1.126
-## income_recode20_49 999                    4.162e+01  1.319e+02   0.315
-## income_recode200+                        -8.774e+01  2.860e+02  -0.307
-## income_recode50_99 999                    1.293e+02  1.232e+02   1.050
-## income_recodeDon't know/prefer no answer  1.848e+02  1.480e+02   1.249
-## age_recode30_39                           6.687e+00  7.273e+01   0.092
-## age_recode40_49                          -2.884e+00  7.714e+01  -0.037
-## age_recode50_64                           5.263e+01  8.700e+01   0.605
-## age_recode65+                             8.882e+01  9.163e+01   0.969
-## sum_exp_70_quint2:factor(wave_id)2        7.021e-03  2.470e-01   0.028
-## sum_exp_70_quint3:factor(wave_id)2        9.165e-03  2.472e-01   0.037
-## sum_exp_70_quint4:factor(wave_id)2       -2.001e-03  2.473e-01  -0.008
-## sum_exp_70_quint5:factor(wave_id)2       -7.443e-03  2.474e-01  -0.030
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 24 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
+#lmer_abs_exp70_q_cov_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_abs_exp70_q_cov_rs)
 #confint.merMod(lmer_abs_exp70_q_cov_rs)
-broom.mixed::glance(lmer_abs_exp70_q_cov_rs)
-```
+#broom.mixed::glance(lmer_abs_exp70_q_cov_rs)
 
-```
-## # A tibble: 1 x 6
-##   sigma    logLik      AIC      BIC REMLcrit df.residual
-##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
-## 1  24.3 -3251416. 6502889. 6503222. 6502831.      704816
-```
-
-```r
 ### Absolute Model Quintiles - with offset
-lmer_abs_exp70_q_cov_off_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
-summary(lmer_abs_exp70_q_cov_off_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: 
-## mvpa ~ sum_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-##  Offset: minutes
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 8941405
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -2.6871 -0.6262 -0.1250  0.4922  7.4865 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 9640364.8 3104.89       
-##                time_seq        790.7   28.12  -1.00
-##  interact_id.1 (Intercept) 3246004.8 1801.67       
-##  Residual                    18836.7  137.25       
-## Number of obs: 704845, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                               1.141e+02  8.385e+02   0.136
-## sum_exp_70_quint2                        -2.085e-01  5.645e-01  -0.369
-## sum_exp_70_quint3                        -3.446e-01  5.648e-01  -0.610
-## sum_exp_70_quint4                        -4.890e-01  5.651e-01  -0.865
-## sum_exp_70_quint5                        -6.720e-01  5.655e-01  -1.188
-## factor(wave_id)2                         -5.358e+02  9.002e+00 -59.522
-## mean_temp_c                               2.492e+00  1.122e-01  22.209
-## total_precip_mm                          -2.410e-01  3.832e-02  -6.289
-## speed_gust_km_h                          -5.185e-01  2.100e-02 -24.687
-## gender_recode2Transgender                -3.613e+02  1.314e+03  -0.275
-## gender_recode2Woman                      -1.275e+02  3.276e+02  -0.389
-## income_recode100_200                     -8.943e+01  8.963e+02  -0.100
-## income_recode20_49 999                    2.834e+02  9.313e+02   0.304
-## income_recode200+                        -1.066e+03  2.017e+03  -0.529
-## income_recode50_99 999                   -4.525e+01  8.701e+02  -0.052
-## income_recodeDon't know/prefer no answer  6.129e+02  1.045e+03   0.586
-## age_recode30_39                          -3.518e+02  5.137e+02  -0.685
-## age_recode40_49                          -4.511e+02  5.445e+02  -0.828
-## age_recode50_64                          -5.268e+02  6.140e+02  -0.858
-## age_recode65+                            -6.572e+02  6.470e+02  -1.016
-## sum_exp_70_quint2:factor(wave_id)2        1.979e-02  1.393e+00   0.014
-## sum_exp_70_quint3:factor(wave_id)2        3.993e-02  1.394e+00   0.029
-## sum_exp_70_quint4:factor(wave_id)2        1.132e-01  1.395e+00   0.081
-## sum_exp_70_quint5:factor(wave_id)2        1.634e-01  1.396e+00   0.117
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 24 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## boundary (singular) fit: see ?isSingular
-```
-
-```r
+#lmer_abs_exp70_q_cov_off_rs <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, offset = minutes, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_abs_exp70_q_cov_off_rs)
 #confint.merMod(lmer_abs_exp70_q_cov_off_rs)
-broom.mixed::glance(lmer_abs_exp70_q_cov_off_rs)
-```
-
-```
-## # A tibble: 1 x 6
-##   sigma    logLik      AIC      BIC REMLcrit df.residual
-##   <dbl>     <dbl>    <dbl>    <dbl>    <dbl>       <int>
-## 1  137. -4470703. 8941463. 8941796. 8941405.      704816
+#broom.mixed::glance(lmer_abs_exp70_q_cov_off_rs)
 ```
 
 ## Relative Exposure
@@ -1608,8 +1402,39 @@ summary(lmer_rel_exp_ln_cov)
 ```
 
 ```r
-#confint.merMod(lmer_rel_exp_ln_cov)
+confint.merMod(lmer_rel_exp_ln_cov)
+```
 
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    16.4794344 19.88149358
+## .sig02                                    19.3658906 24.62243682
+## .sigma                                    23.5805996 23.65939354
+## (Intercept)                                8.5461753 56.28012978
+## rel_exp_70                                 0.4440526  0.47765378
+## factor(wave_id)2                          -5.3210355  7.44910175
+## mean_temp_c                               -1.2512946 -0.06323048
+## total_precip_mm                           -0.4782011  0.52712017
+## speed_gust_km_h                           -0.1714782  0.36697418
+## gender_recode2Transgender                -55.0275893  7.55322303
+## gender_recode2Woman                      -17.7712780 -2.20038723
+## income_recode100_200                     -22.3032333 20.36965036
+## income_recode20_49 999                    -9.4178931 34.93584428
+## income_recode200+                        -28.3885316 67.64646984
+## income_recode50_99 999                   -20.9935998 20.43918068
+## income_recodeDon't know/prefer no answer -20.6708586 29.10023645
+## age_recode30_39                           -4.1442488 20.28472832
+## age_recode40_49                           -1.8563636 24.06111450
+## age_recode50_64                           -4.8611011 24.37352742
+## age_recode65+                            -15.9549530 14.85573917
+## rel_exp_70:factor(wave_id)2               -0.3855688 -0.32014903
+```
+
+```r
 ### Linear exposure - with offset
 lmer_rel_exp_ln_cov_off <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_rel_exp_ln_cov_off)
@@ -1666,8 +1491,39 @@ summary(lmer_rel_exp_ln_cov_off)
 ```
 
 ```r
-#confint.merMod(lmer_rel_exp_ln_cov_off)
+confint.merMod(lmer_rel_exp_ln_cov_off)
+```
 
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %      97.5 %
+## .sig01                                    119.905451  144.598353
+## .sig02                                    137.115197  174.331507
+## .sigma                                    133.405223  133.850990
+## (Intercept)                              -469.604031 -128.927764
+## rel_exp_70                                  1.735726    1.925844
+## factor(wave_id)2                            5.340948   98.164564
+## mean_temp_c                               -11.524332   -2.900063
+## total_precip_mm                            -3.169979    4.139986
+## speed_gust_km_h                            -1.504374    2.411087
+## gender_recode2Transgender                -347.379858   95.674250
+## gender_recode2Woman                       -57.305034   52.923451
+## income_recode100_200                     -165.557987  136.554182
+## income_recode20_49 999                   -206.215803  107.799775
+## income_recode200+                        -493.029560  186.864906
+## income_recode50_99 999                   -152.957264  140.376752
+## income_recodeDon't know/prefer no answer -191.592903  160.772214
+## age_recode30_39                          -146.647642   26.292904
+## age_recode40_49                          -169.032440   14.443805
+## age_recode50_64                          -245.497700  -38.527829
+## age_recode65+                            -225.651177   -7.528369
+## rel_exp_70:factor(wave_id)2                 3.308984    3.679158
+```
+
+```r
 ### Quintiles of exposure
 lmer_rel_exp_q_cov <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_q_cov)
@@ -1730,8 +1586,45 @@ summary(lmer_rel_exp_q_cov)
 ```
 
 ```r
-#confint.merMod(lmer_rel_exp_q_cov)
+confint.merMod(lmer_rel_exp_q_cov)
+```
 
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %       97.5 %
+## .sig01                                    16.2746868 19.634390588
+## .sig02                                    19.4002250 24.665392948
+## .sigma                                    23.6303290 23.709288518
+## (Intercept)                                8.2399769 55.856063901
+## rel_exp_70_quint2                         -0.1815660  0.202274864
+## rel_exp_70_quint3                         -0.1740805  0.209977442
+## rel_exp_70_quint4                         -0.1637356  0.220517836
+## rel_exp_70_quint5                         -0.1568650  0.227629610
+## factor(wave_id)2                          -6.0493924  6.575726213
+## mean_temp_c                               -1.1657332  0.007720801
+## total_precip_mm                           -0.4916779  0.501180029
+## speed_gust_km_h                           -0.1733959  0.358378793
+## gender_recode2Transgender                -54.7074845  7.983077354
+## gender_recode2Woman                      -17.0369970 -1.438908021
+## income_recode100_200                     -21.9002618 20.847564759
+## income_recode20_49 999                    -9.3205408 35.111104063
+## income_recode200+                        -30.4638738 65.739710181
+## income_recode50_99 999                   -20.6142750 20.891265944
+## income_recodeDon't know/prefer no answer -21.0314173 28.827088523
+## age_recode30_39                           -4.1226919 20.349155738
+## age_recode40_49                           -2.2781279 23.684863213
+## age_recode50_64                           -5.7035068 23.582404161
+## age_recode65+                            -16.3713864 14.493288867
+## rel_exp_70_quint2:factor(wave_id)2        -0.4792647  0.489243175
+## rel_exp_70_quint3:factor(wave_id)2        -0.4721458  0.496994376
+## rel_exp_70_quint4:factor(wave_id)2        -0.4829200  0.486704110
+## rel_exp_70_quint5:factor(wave_id)2        -0.4798218  0.490277189
+```
+
+```r
 ### Quintiles of exposure - with offset
 lmer_rel_exp_q_cov_off <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure, offset = minutes)
 summary(lmer_rel_exp_q_cov_off)
@@ -1795,7 +1688,42 @@ summary(lmer_rel_exp_q_cov_off)
 ```
 
 ```r
-#confint.merMod(lmer_rel_exp_q_cov_off)
+confint.merMod(lmer_rel_exp_q_cov_off)
+```
+
+```
+## Computing profile confidence intervals ...
+```
+
+```
+##                                                2.5 %       97.5 %
+## .sig01                                    122.985289  148.3121164
+## .sig02                                    139.100172  176.8534931
+## .sigma                                    133.908959  134.3564138
+## (Intercept)                              -463.929962 -117.1293580
+## rel_exp_70_quint2                          -1.271178    0.9039812
+## rel_exp_70_quint3                          -1.411280    0.7651096
+## rel_exp_70_quint4                          -1.549105    0.6283926
+## rel_exp_70_quint5                          -1.740674    0.4381900
+## factor(wave_id)2                           17.454733  112.7129077
+## mean_temp_c                               -11.747397   -2.9029485
+## total_precip_mm                            -3.336250    4.1612558
+## speed_gust_km_h                            -1.522867    2.4930633
+## gender_recode2Transgender                -361.725609   87.7376261
+## gender_recode2Woman                       -58.490271   53.3318798
+## income_recode100_200                     -164.028589  142.4544526
+## income_recode20_49 999                   -206.311002  112.2476690
+## income_recode200+                        -502.266495  187.4638104
+## income_recode50_99 999                   -150.869778  146.7081126
+## income_recodeDon't know/prefer no answer -198.801373  158.6615237
+## age_recode30_39                          -151.670753   23.7712620
+## age_recode40_49                          -173.160926   12.9691730
+## age_recode50_64                          -253.238322  -43.2745552
+## age_recode65+                            -236.477317  -15.1998089
+## rel_exp_70_quint2:factor(wave_id)2         -2.716234    2.7721321
+## rel_exp_70_quint3:factor(wave_id)2         -2.720720    2.7712284
+## rel_exp_70_quint4:factor(wave_id)2         -2.639292    2.8553987
+## rel_exp_70_quint5:factor(wave_id)2         -2.672134    2.8252487
 ```
 
 ### Relative exposure with a 70 meter buffer and covariates - Random Slopes
@@ -1803,289 +1731,23 @@ summary(lmer_rel_exp_q_cov_off)
 
 ```r
 ### Linear exposure
-lmer_rel_exp_ln_cov_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## unable to evaluate scaled gradient
-```
-
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
-```
-
-```r
-summary(lmer_rel_exp_ln_cov_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ rel_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6374885
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.4121 -0.5251 -0.0818  0.4427  5.7715 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 46806.796 216.349       
-##                time_seq        6.007   2.451  -1.00
-##  interact_id.1 (Intercept) 36242.048 190.373       
-##  Residual                    593.317  24.358       
-## Number of obs: 690856, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                               -8.263615  88.960638  -0.093
-## rel_exp_70                                 0.137382   0.008920  15.401
-## factor(wave_id)2                           7.545492   1.612772   4.679
-## mean_temp_c                               -0.013147   0.020110  -0.654
-## total_precip_mm                           -0.070270   0.006868 -10.232
-## speed_gust_km_h                           -0.066907   0.003775 -17.726
-## gender_recode2Transgender                -13.528012 139.479087  -0.097
-## gender_recode2Woman                       -7.515934  35.055222  -0.214
-## income_recode100_200                       8.067841  95.174827   0.085
-## income_recode20_49 999                    31.555161  98.803499   0.319
-## income_recode200+                        -96.707208 214.019075  -0.452
-## income_recode50_99 999                    70.118152  92.349345   0.759
-## income_recodeDon't know/prefer no answer 162.767071 110.882352   1.468
-## age_recode30_39                           56.462283  54.664595   1.033
-## age_recode40_49                           17.256582  58.196734   0.297
-## age_recode50_64                          -30.130545  65.216802  -0.462
-## age_recode65+                            -66.206914  68.683316  -0.964
-## rel_exp_70:factor(wave_id)2               -1.021549   0.018586 -54.962
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 18 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## unable to evaluate scaled gradient
-## Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
-```
-
-```r
+#lmer_rel_exp_ln_cov_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_rel_exp_ln_cov_rs)
 #confint.merMod(lmer_rel_exp_ln_cov_rs)
 
 ### Linear exposure - with offset
-lmer_rel_exp_ln_cov_off_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-```
-
-```
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## unable to evaluate scaled gradient
-
-## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
-## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
-```
-
-```r
-summary(lmer_rel_exp_ln_cov_off_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ rel_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6374885
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.4121 -0.5251 -0.0818  0.4427  5.7715 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev. Corr 
-##  interact_id   (Intercept) 46806.796 216.349       
-##                time_seq        6.007   2.451  -1.00
-##  interact_id.1 (Intercept) 36242.048 190.373       
-##  Residual                    593.317  24.358       
-## Number of obs: 690856, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                               -8.263615  88.960638  -0.093
-## rel_exp_70                                 0.137382   0.008920  15.401
-## factor(wave_id)2                           7.545492   1.612772   4.679
-## mean_temp_c                               -0.013147   0.020110  -0.654
-## total_precip_mm                           -0.070270   0.006868 -10.232
-## speed_gust_km_h                           -0.066907   0.003775 -17.726
-## gender_recode2Transgender                -13.528012 139.479087  -0.097
-## gender_recode2Woman                       -7.515934  35.055222  -0.214
-## income_recode100_200                       8.067841  95.174827   0.085
-## income_recode20_49 999                    31.555161  98.803499   0.319
-## income_recode200+                        -96.707208 214.019075  -0.452
-## income_recode50_99 999                    70.118152  92.349345   0.759
-## income_recodeDon't know/prefer no answer 162.767071 110.882352   1.468
-## age_recode30_39                           56.462283  54.664595   1.033
-## age_recode40_49                           17.256582  58.196734   0.297
-## age_recode50_64                          -30.130545  65.216802  -0.462
-## age_recode65+                            -66.206914  68.683316  -0.964
-## rel_exp_70:factor(wave_id)2               -1.021549   0.018586 -54.962
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 18 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```
-## optimizer (Nelder_Mead) convergence code: 0 (OK)
-## unable to evaluate scaled gradient
-## Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
-```
-
-```r
+#lmer_rel_exp_ln_cov_off_rs <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_rel_exp_ln_cov_off_rs)
 #confint.merMod(lmer_rel_exp_ln_cov_off_rs)
 
 ### Quintiles of exposure
-lmer_rel_exp_q_cov_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-summary(lmer_rel_exp_q_cov_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: 
-## mvpa ~ rel_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6378026
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.3575 -0.5130 -0.0782  0.4358  5.7623 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev.  Corr 
-##  interact_id   (Intercept) 1.220e+05 3.493e+02      
-##                time_seq    8.267e+00 2.875e+00 -0.90
-##  interact_id.1 (Intercept) 5.462e-05 7.391e-03      
-##  Residual                  5.960e+02 2.441e+01      
-## Number of obs: 690856, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                              -36.779461  70.842566  -0.519
-## rel_exp_70_quint2                          0.012228   0.100998   0.121
-## rel_exp_70_quint3                          0.019614   0.101056   0.194
-## rel_exp_70_quint4                          0.031664   0.101107   0.313
-## rel_exp_70_quint5                          0.039723   0.101170   0.393
-## factor(wave_id)2                          -0.841264   1.616014  -0.521
-## mean_temp_c                               -0.015392   0.020156  -0.764
-## total_precip_mm                           -0.055756   0.006875  -8.110
-## speed_gust_km_h                           -0.064417   0.003782 -17.033
-## gender_recode2Transgender                -10.307419 111.052121  -0.093
-## gender_recode2Woman                       -5.500355  27.975043  -0.197
-## income_recode100_200                      33.091535  75.809437   0.437
-## income_recode20_49 999                    33.079978  78.687018   0.420
-## income_recode200+                        -99.485112 170.583887  -0.583
-## income_recode50_99 999                    85.960268  73.551645   1.169
-## income_recodeDon't know/prefer no answer 164.004134  88.308269   1.857
-## age_recode30_39                           49.430600  43.576152   1.134
-## age_recode40_49                           21.382091  46.500043   0.460
-## age_recode50_64                            1.983408  51.972774   0.038
-## age_recode65+                            -20.485634  54.701128  -0.375
-## rel_exp_70_quint2:factor(wave_id)2         0.008505   0.254839   0.033
-## rel_exp_70_quint3:factor(wave_id)2         0.012388   0.255006   0.049
-## rel_exp_70_quint4:factor(wave_id)2         0.001284   0.255133   0.005
-## rel_exp_70_quint5:factor(wave_id)2        -0.004860   0.255258  -0.019
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 24 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```r
+#lmer_rel_exp_q_cov_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_rel_exp_q_cov_rs)
 #confint.merMod(lmer_rel_exp_q_cov_rs)
 
 ### Quintiles of exposure - with offset
-lmer_rel_exp_q_cov_off_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
-summary(lmer_rel_exp_q_cov_off_rs)
-```
-
-```
-## Linear mixed model fit by REML ['lmerMod']
-## Formula: 
-## mvpa ~ rel_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
-##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (time_seq | interact_id) + (1 | interact_id)
-##    Data: data_exposure
-## Control: lmerControl(optimizer = "Nelder_Mead")
-## 
-## REML criterion at convergence: 6378026
-## 
-## Scaled residuals: 
-##     Min      1Q  Median      3Q     Max 
-## -5.3575 -0.5130 -0.0782  0.4358  5.7623 
-## 
-## Random effects:
-##  Groups        Name        Variance  Std.Dev.  Corr 
-##  interact_id   (Intercept) 1.220e+05 3.493e+02      
-##                time_seq    8.267e+00 2.875e+00 -0.90
-##  interact_id.1 (Intercept) 5.462e-05 7.391e-03      
-##  Residual                  5.960e+02 2.441e+01      
-## Number of obs: 690856, groups:  interact_id, 134
-## 
-## Fixed effects:
-##                                            Estimate Std. Error t value
-## (Intercept)                              -36.779461  70.842566  -0.519
-## rel_exp_70_quint2                          0.012228   0.100998   0.121
-## rel_exp_70_quint3                          0.019614   0.101056   0.194
-## rel_exp_70_quint4                          0.031664   0.101107   0.313
-## rel_exp_70_quint5                          0.039723   0.101170   0.393
-## factor(wave_id)2                          -0.841264   1.616014  -0.521
-## mean_temp_c                               -0.015392   0.020156  -0.764
-## total_precip_mm                           -0.055756   0.006875  -8.110
-## speed_gust_km_h                           -0.064417   0.003782 -17.033
-## gender_recode2Transgender                -10.307419 111.052121  -0.093
-## gender_recode2Woman                       -5.500355  27.975043  -0.197
-## income_recode100_200                      33.091535  75.809437   0.437
-## income_recode20_49 999                    33.079978  78.687018   0.420
-## income_recode200+                        -99.485112 170.583887  -0.583
-## income_recode50_99 999                    85.960268  73.551645   1.169
-## income_recodeDon't know/prefer no answer 164.004134  88.308269   1.857
-## age_recode30_39                           49.430600  43.576152   1.134
-## age_recode40_49                           21.382091  46.500043   0.460
-## age_recode50_64                            1.983408  51.972774   0.038
-## age_recode65+                            -20.485634  54.701128  -0.375
-## rel_exp_70_quint2:factor(wave_id)2         0.008505   0.254839   0.033
-## rel_exp_70_quint3:factor(wave_id)2         0.012388   0.255006   0.049
-## rel_exp_70_quint4:factor(wave_id)2         0.001284   0.255133   0.005
-## rel_exp_70_quint5:factor(wave_id)2        -0.004860   0.255258  -0.019
-```
-
-```
-## 
-## Correlation matrix not shown by default, as p = 24 > 12.
-## Use print(x, correlation=TRUE)  or
-##     vcov(x)        if you need it
-```
-
-```r
+#lmer_rel_exp_q_cov_off_rs <- lmer(mvpa ~ rel_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer ="Nelder_Mead"))
+#summary(lmer_rel_exp_q_cov_off_rs)
 #confint.merMod(lmer_rel_exp_q_cov_off_rs)
 ```
 
