@@ -345,7 +345,7 @@ ggplot() +
         geom_sf() +
         geom_sf(data = w1_intervention_buffer_70) +                
         geom_point(aes(x = lon, y = lat, colour = exposed_70), data = SD_vic_one, alpha = 0.2) +
-        geom_sf(data = vic_int_t) +
+        geom_sf(data = w1_intervention_buffer_70) +
         annotation_scale() + 
         theme_map()
 ggsave("exposed_2017.jpg", dpi = 150, height = 4, width = 6)
