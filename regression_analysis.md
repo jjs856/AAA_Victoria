@@ -373,6 +373,21 @@ summary(data_exposure$sum_exp_70)
 ```
 
 ```r
+data_exposure %>%
+      group_by(wave_id) %>%
+        get_summary_stats(sum_exp_70)
+```
+
+```
+## # A tibble: 2 x 14
+##   wave_id variable      n   min   max median    q1    q3   iqr   mad  mean    sd
+##     <dbl> <chr>     <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+## 1       1 sum_exp… 708729     0   462      0     0     6     6   0    14.5  48.4
+## 2       2 sum_exp… 549310     0   497      7     2    21    19  10.4  31.0  72.8
+## # … with 2 more variables: se <dbl>, ci <dbl>
+```
+
+```r
 summary(data_exposure$sum_exp_50)
 ```
 
@@ -467,6 +482,21 @@ summary(data_exposure$rel_exp_70)
 ```
 
 ```r
+data_exposure %>%
+      group_by(wave_id) %>%
+        get_summary_stats(rel_exp_70)
+```
+
+```
+## # A tibble: 2 x 14
+##   wave_id variable      n   min   max median    q1    q3   iqr   mad  mean    sd
+##     <dbl> <chr>     <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+## 1       1 rel_exp… 699417     0  38.6   0    0     0.962 0.962  0     1.92  5.23
+## 2       2 rel_exp… 525057     0  36.3   1.21 0.252 3.14  2.88   1.79  3.35  5.76
+## # … with 2 more variables: se <dbl>, ci <dbl>
+```
+
+```r
 summary(data_exposure$rel_exp_50)
 ```
 
@@ -523,7 +553,7 @@ plot(rel_exposure_histo)
 ![](regression_analysis_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
 ```r
-ggsave("rel_exposure_histo.jpg", width = 4, height = 6)
+ggsave("rel_exposure_histo.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -532,6 +562,38 @@ ggsave("rel_exposure_histo.jpg", width = 4, height = 6)
 
 ```
 ## Warning: Removed 39594 rows containing non-finite values (stat_bin).
+```
+
+
+```r
+abs_exposure_histo <- ggplot(data_exposure, aes(sum_exp_70)) + 
+  geom_histogram() + 
+  facet_wrap(~ wave) + 
+  labs(x = "Asolute Exposure") +
+  theme_classic()
+plot(abs_exposure_histo)
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+```
+## Warning: Removed 6029 rows containing non-finite values (stat_bin).
+```
+
+![](regression_analysis_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
+```r
+ggsave("abs_exposure_histo.jpg", width = 6, height = 4)
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+```
+## Warning: Removed 6029 rows containing non-finite values (stat_bin).
 ```
 
 ### Histograms of Moderate to vigorous PA 
@@ -583,10 +645,10 @@ plot(pa_histo)
 ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
-![](regression_analysis_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](regression_analysis_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 ```r
-ggsave("pa_histo.jpg", width = 4, height = 6)
+ggsave("pa_histo.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -602,7 +664,7 @@ pa_w2 <- filter(data_exposure, wave_id == 2)
 
 ### Wave 1 
 pa_day_w1 <- ggplot(pa_w1, aes(x = date, y = mvpa)) + 
-  geom_point(alpha = 0.5) + 
+  geom_point(alpha = 0.005) + 
   geom_smooth() +
   labs(x = "Date", y = "Minutes of MVPA per Day" ) +
   theme_classic()
@@ -613,10 +675,10 @@ plot(pa_day_w1)
 ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 ```
 
-![](regression_analysis_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](regression_analysis_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 ```r
-ggsave("pa_day_w1.jpg", width = 4, height = 6)
+ggsave("pa_day_w1.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -626,7 +688,7 @@ ggsave("pa_day_w1.jpg", width = 4, height = 6)
 ```r
 ### Wave 2
 pa_day_w2 <- ggplot(pa_w2, aes(x = date, y = mvpa)) + 
-  geom_point(alpha = 0.5) + 
+  geom_point(alpha = 0.005) + 
   geom_smooth() +
   labs(x = "Date", y = "Minutes of MVPA per Day" ) +
   theme_classic()
@@ -637,10 +699,10 @@ plot(pa_day_w2)
 ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 ```
 
-![](regression_analysis_files/figure-html/unnamed-chunk-13-2.png)<!-- -->
+![](regression_analysis_files/figure-html/unnamed-chunk-14-2.png)<!-- -->
 
 ```r
-ggsave("pa_day_w2.jpg", width = 4, height = 6)
+ggsave("pa_day_w2.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -652,11 +714,11 @@ ggsave("pa_day_w2.jpg", width = 4, height = 6)
 
 ```r
 abs_exp_pa_scatter <- ggplot(data_exposure, aes(x = sum_exp_70, y = mvpa)) + 
-  geom_point(alpha = 0.2) +
-  geom_smooth() +
-  labs(x = "Absolute Exposure", y = "Minutes of MVPA per Day" ) +
-  facet_wrap(~ wave) + 
-  theme_classic()
+                geom_point(alpha = 0.005) +
+                geom_smooth() +
+                labs(x = "Absolute Exposure", y = "Minutes of MVPA per Day" ) +
+                facet_wrap(~ wave) +
+                theme_classic()
 
 plot(abs_exp_pa_scatter)
 ```
@@ -673,10 +735,10 @@ plot(abs_exp_pa_scatter)
 ## Warning: Removed 6029 rows containing missing values (geom_point).
 ```
 
-![](regression_analysis_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](regression_analysis_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 ```r
-ggsave("abs_exp_pa_scatter.jpg", width = 4, height = 6)
+ggsave("abs_exp_pa_scatter.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -694,7 +756,7 @@ ggsave("abs_exp_pa_scatter.jpg", width = 4, height = 6)
 
 ```r
 rel_exp_pa_scatter <- ggplot(data_exposure, aes(x = rel_exp_70, y = mvpa)) + 
-  geom_point(alpha = 0.2) +
+  geom_point(alpha = 0.005) +
   geom_smooth() +
   labs(x = "Relative Exposure", y = "Minutes of MVPA per Day" ) +
   facet_wrap(~ wave) + 
@@ -715,10 +777,10 @@ plot(rel_exp_pa_scatter)
 ## Warning: Removed 39594 rows containing missing values (geom_point).
 ```
 
-![](regression_analysis_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](regression_analysis_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 ```r
-ggsave("rel_exp_pa_scatter.jpg", width = 4, height = 6)
+ggsave("rel_exp_pa_scatter.jpg", width = 6, height = 4)
 ```
 
 ```
@@ -1001,13 +1063,13 @@ MLM models with person level random intercepts using the lmer package
 
 ```r
 ### Null Model
-lmer_null_exp70_ln <- lmer(mvpa ~ 1 + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_null_exp70_ln <- lmer(mvpa ~ 1 + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_null_exp70_ln)
 ```
 
 ```
 ## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ 1 + (1 | date_time) + (1 | interact_id)
+## Formula: mvpa ~ 1 + (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 11793864
@@ -1018,10 +1080,10 @@ summary(lmer_null_exp70_ln)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 387.4    19.68   
+##  time_seq    (Intercept) 387.4    19.68   
 ##  interact_id (Intercept) 601.8    24.53   
 ##  Residual                657.8    25.65   
-## Number of obs: 1264068, groups:  date_time, 345; interact_id, 210
+## Number of obs: 1264068, groups:  time_seq, 345; interact_id, 210
 ## 
 ## Fixed effects:
 ##             Estimate Std. Error t value
@@ -1041,14 +1103,14 @@ broom.mixed::glance(lmer_null_exp70_ln)
 
 ```r
 ### Model with no covariates
-lmer_abs_exp70_ln <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_abs_exp70_ln <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_ln)
 ```
 
 ```
 ## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + (1 | date_time) + (1 |  
-##     interact_id)
+## Formula: 
+## mvpa ~ sum_exp_70 * factor(wave_id) + (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 11693416
@@ -1059,10 +1121,10 @@ summary(lmer_abs_exp70_ln)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 368.4    19.19   
+##  time_seq    (Intercept) 368.4    19.19   
 ##  interact_id (Intercept) 578.7    24.06   
 ##  Residual                635.0    25.20   
-## Number of obs: 1258039, groups:  date_time, 345; interact_id, 210
+## Number of obs: 1258039, groups:  time_seq, 345; interact_id, 210
 ## 
 ## Fixed effects:
 ##                              Estimate Std. Error t value
@@ -1095,7 +1157,7 @@ broom.mixed::glance(lmer_abs_exp70_ln)
 
 ```r
 ### Absolute Model Continuous
-lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_abs_exp70_ln_cov <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_ln_cov)
 ```
 
@@ -1103,7 +1165,7 @@ summary(lmer_abs_exp70_ln_cov)
 ## Linear mixed model fit by REML ['lmerMod']
 ## Formula: mvpa ~ sum_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
 ##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (1 | date_time) + (1 | interact_id)
+##     (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 6453454
@@ -1114,10 +1176,10 @@ summary(lmer_abs_exp70_ln_cov)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 326.9    18.08   
+##  time_seq    (Intercept) 326.9    18.08   
 ##  interact_id (Intercept) 494.3    22.23   
 ##  Residual                552.4    23.50   
-## Number of obs: 704845, groups:  date_time, 225; interact_id, 134
+## Number of obs: 704845, groups:  time_seq, 225; interact_id, 134
 ## 
 ## Fixed effects:
 ##                                            Estimate Std. Error t value
@@ -1199,7 +1261,6 @@ broom.mixed::glance(lmer_abs_exp70_ln_cov)
 ```r
 ### Absolute Model Continuous
 #lmer_abs_exp70_ln_cov_rs <- lmer(mvpa ~ sum_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (time_seq | interact_id) + (1 | interact_id), data = data_exposure, control = lmerControl(optimizer = "nlminbwrap"))
-
 #summary(lmer_abs_exp70_ln_cov_rs)
 #confint.merMod(lmer_abs_exp70_ln_cov_rs)
 #broom.mixed::glance(lmer_abs_exp70_ln_cov_rs)
@@ -1210,7 +1271,7 @@ broom.mixed::glance(lmer_abs_exp70_ln_cov)
 
 ```r
 ### Absolute Model Quintiles
-lmer_abs_exp70_q_cov <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_abs_exp70_q_cov <- lmer(mvpa ~ sum_exp_70_quint*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_abs_exp70_q_cov)
 ```
 
@@ -1219,7 +1280,7 @@ summary(lmer_abs_exp70_q_cov)
 ## Formula: 
 ## mvpa ~ sum_exp_70_quint * factor(wave_id) + mean_temp_c + total_precip_mm +  
 ##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (1 | date_time) + (1 | interact_id)
+##     (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 6462817
@@ -1230,10 +1291,10 @@ summary(lmer_abs_exp70_q_cov)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 324.5    18.01   
+##  time_seq    (Intercept) 324.5    18.01   
 ##  interact_id (Intercept) 474.0    21.77   
 ##  Residual                559.8    23.66   
-## Number of obs: 704845, groups:  date_time, 225; interact_id, 134
+## Number of obs: 704845, groups:  time_seq, 225; interact_id, 134
 ## 
 ## Fixed effects:
 ##                                            Estimate Std. Error t value
@@ -1327,14 +1388,14 @@ broom.mixed::glance(lmer_abs_exp70_q_cov)
 
 ```r
 ### Linear exposure
-lmer_rel_exp_ln <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_rel_exp_ln <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_ln)
 ```
 
 ```
 ## Linear mixed model fit by REML ['lmerMod']
-## Formula: mvpa ~ rel_exp_70 * factor(wave_id) + (1 | date_time) + (1 |  
-##     interact_id)
+## Formula: 
+## mvpa ~ rel_exp_70 * factor(wave_id) + (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 11380651
@@ -1345,10 +1406,10 @@ summary(lmer_rel_exp_ln)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 398.7    19.97   
+##  time_seq    (Intercept) 398.7    19.97   
 ##  interact_id (Intercept) 605.4    24.60   
 ##  Residual                634.6    25.19   
-## Number of obs: 1224474, groups:  date_time, 345; interact_id, 210
+## Number of obs: 1224474, groups:  time_seq, 345; interact_id, 210
 ## 
 ## Fixed effects:
 ##                               Estimate Std. Error t value
@@ -1371,7 +1432,7 @@ summary(lmer_rel_exp_ln)
 
 ```r
 ### Linear exposure
-lmer_rel_exp_ln_cov <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | date_time) + (1 | interact_id), data = data_exposure)
+lmer_rel_exp_ln_cov <- lmer(mvpa ~ rel_exp_70*factor(wave_id) + mean_temp_c + total_precip_mm + speed_gust_km_h + gender_recode2 + income_recode + age_recode + (1 | time_seq) + (1 | interact_id), data = data_exposure)
 summary(lmer_rel_exp_ln_cov)
 ```
 
@@ -1379,7 +1440,7 @@ summary(lmer_rel_exp_ln_cov)
 ## Linear mixed model fit by REML ['lmerMod']
 ## Formula: mvpa ~ rel_exp_70 * factor(wave_id) + mean_temp_c + total_precip_mm +  
 ##     speed_gust_km_h + gender_recode2 + income_recode + age_recode +  
-##     (1 | date_time) + (1 | interact_id)
+##     (1 | time_seq) + (1 | interact_id)
 ##    Data: data_exposure
 ## 
 ## REML criterion at convergence: 6332248
@@ -1390,10 +1451,10 @@ summary(lmer_rel_exp_ln_cov)
 ## 
 ## Random effects:
 ##  Groups      Name        Variance Std.Dev.
-##  date_time   (Intercept) 332.3    18.23   
+##  time_seq    (Intercept) 332.3    18.23   
 ##  interact_id (Intercept) 517.7    22.75   
 ##  Residual                557.9    23.62   
-## Number of obs: 690856, groups:  date_time, 222; interact_id, 134
+## Number of obs: 690856, groups:  time_seq, 222; interact_id, 134
 ## 
 ## Fixed effects:
 ##                                            Estimate Std. Error t value
